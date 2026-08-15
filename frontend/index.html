@@ -157,7 +157,8 @@ pre {
     <div class="stats">
       <div class="stat"><div class="value" id="stat-profiles">-</div><div class="label">配置档案</div></div>
       <div class="stat"><div class="value" id="stat-subscriptions">-</div><div class="label">订阅</div></div>
-      <div class="stat"><div class="value" id="stat-formats">2</div><div class="label">支持格式</div></div>
+      <div class="stat"><div class="value" id="stat-formats">-</div><div class="label">支持格式</div></div>
+      <div class="stat"><div class="value" id="stat-rulesets">-</div><div class="label">规则集</div></div>
       <div class="stat"><div class="value"><span class="status ok" id="stat-health"><span class="dot"></span>正常</span></div><div class="label">服务状态</div></div>
     </div>
     <div class="card">
@@ -189,8 +190,8 @@ pre {
         <option value="surge">Surge</option>
       </select>
       <h3>订阅</h3>
-      <label>订阅 URL（可多个，每行一个）</label>
-      <textarea id="pf-urls" placeholder="https://机场订阅链接"></textarea>
+      <label>订阅 URL（可多个，每行一个；用 | 分隔前缀，如 [机场A]|https://...）</label>
+      <textarea id="pf-urls" placeholder="[机场A]|https://机场1订阅链接&#10;[机场B]|https://机场2订阅链接"></textarea>
       <h3>转换规则</h3>
       <div class="row">
         <div><label>只保留（逗号分隔）</label><input id="pf-include" placeholder="香港,美国"></div>
@@ -258,6 +259,7 @@ pre {
       </div>
       <div id="conv-result" style="margin-top:16px;display:none">
         <button class="btn secondary sm copy-btn" onclick="copyResult()">复制</button>
+        <button class="btn secondary sm" onclick="downloadResult()" style="float:right;margin-right:60px">下载</button>
         <h3>转换结果</h3>
         <pre id="conv-output"></pre>
       </div>
@@ -372,6 +374,16 @@ async function loadDashboard() {
     let subs = 0;
     profiles.forEach(p => subs += (p.subscriptions || []).length);
     document.getElementById('stat-subscriptions').textContent = subs;
+    // 格式数
+    try {
+      const fmts = await api('/api/formats');
+      document.getElementById('stat-formats').textContent = fmts.formats.length;
+    } catch (e) { document.getElementById('stat-formats').textContent = '-'; }
+    // 规则集数
+    try {
+      const rs = await api('/api/rulesets');
+      document.getElementById('stat-rulesets').textContent = rs.rulesets.length;
+    } catch (e) { document.getElementById('stat-rulesets').textContent = '-'; }
     await api('/api/health');
     document.getElementById('stat-health').innerHTML = '<span class="dot"></span>正常';
   } catch (e) {
@@ -388,18 +400,25 @@ async function loadProfiles() {
       list.innerHTML = '<p style="color:var(--muted)">暂无配置档案，点击「新建档案」创建</p>';
       return;
     }
-    list.innerHTML = profiles.map(p => `
+    list.innerHTML = profiles.map(p => {
+      const subs = p.subscriptions || [];
+      const subMeta = subs.map(s => {
+        const host = (s.url || '').replace(/^https?:\/\//,'').split('/')[0] || '?';
+        return `${s.prefix ? s.prefix + ' ' : ''}${host}`;
+      }).join(', ');
+      return `
       <div class="list-item">
         <div>
           <div class="name">${p.name}</div>
-          <div class="meta">格式: ${p.target} | 订阅: ${(p.subscriptions||[]).length} 个 | ${(p.transforms||{}).merge_single ? '合并单节点' : '保留单节点'}</div>
+          <div class="meta">格式: ${p.target} | 订阅 ${subs.length} 个: ${subMeta || '无'} | ${(p.transforms||{}).merge_single ? '合并单节点' : '保留单节点'}</div>
         </div>
         <div class="actions">
           <button class="btn sm secondary" onclick="editProfile('${p.id}')">编辑</button>
           <button class="btn sm" onclick="getSubLink('${p.name}')">订阅链接</button>
           <button class="btn sm danger" onclick="deleteProfile('${p.id}','${p.name}')">删除</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     // 更新二维码下拉
     const sel = document.getElementById('qr-profile');
     sel.innerHTML = profiles.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
@@ -415,7 +434,7 @@ function showProfileForm(p) {
     document.getElementById('pf-id').value = p.id;
     document.getElementById('pf-name').value = p.name;
     document.getElementById('pf-target').value = p.target;
-    document.getElementById('pf-urls').value = (p.subscriptions||[]).map(s => s.url).join('\n');
+    document.getElementById('pf-urls').value = (p.subscriptions||[]).map(s => s.prefix ? `${s.prefix}|${s.url}` : s.url).join('\n');
     document.getElementById('pf-include').value = (p.transforms?.include||[]).join(',');
     document.getElementById('pf-exclude').value = (p.transforms?.exclude||[]).join(',');
     document.getElementById('pf-merge-single').checked = p.transforms?.merge_single !== false;
@@ -435,12 +454,22 @@ async function editProfile(id) {
 }
 async function saveProfile() {
   const id = document.getElementById('pf-id').value;
-  const urls = document.getElementById('pf-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
-  if (!urls.length) { toast('请填写至少一个订阅 URL'); return; }
+  const rawLines = document.getElementById('pf-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!rawLines.length) { toast('请填写至少一个订阅 URL'); return; }
+  // 解析 [前缀]|URL 格式
+  const subscriptions = rawLines.map(line => {
+    let prefix = null, url = line;
+    if (line.includes('|')) {
+      const [p, u] = line.split('|');
+      prefix = p.trim() || null;
+      url = u.trim();
+    }
+    return { url, ua: 'ClashForWindows/0.20.39', prefix };
+  });
   const profile = {
     name: document.getElementById('pf-name').value || 'unnamed',
     target: document.getElementById('pf-target').value,
-    subscriptions: urls.map(u => ({ url: u, ua: 'ClashForWindows/0.20.39' })),
+    subscriptions,
     transforms: {
       include: document.getElementById('pf-include').value.split(',').map(s=>s.trim()).filter(Boolean),
       exclude: document.getElementById('pf-exclude').value.split(',').map(s=>s.trim()).filter(Boolean),
@@ -499,6 +528,18 @@ async function copyResult() {
   await navigator.clipboard.writeText(text);
   toast('已复制');
 }
+function downloadResult() {
+  const text = document.getElementById('conv-output').textContent;
+  const target = document.getElementById('conv-target').value;
+  const ext = target === 'singbox' ? 'json' : (target === 'quanx' ? 'conf' : 'yaml');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `subforge-${target}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已下载');
+}
 async function previewNodes() {
   const source = document.getElementById('conv-source').value.trim();
   if (!source) { toast('请输入订阅或配置内容'); return; }
@@ -515,7 +556,11 @@ async function previewNodes() {
   document.getElementById('node-list').innerHTML = '加载中...';
   try {
     const data = await api('/api/nodes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
-    document.getElementById('node-stats').textContent = `共 ${data.count} 个节点`;
+    // 协议统计
+    const protoCount = {};
+    data.nodes.forEach(n => { protoCount[n.protocol] = (protoCount[n.protocol]||0) + 1; });
+    const protoStr = Object.entries(protoCount).map(([p,c]) => `${p}:${c}`).join(' · ');
+    document.getElementById('node-stats').textContent = `共 ${data.count} 个节点 | ${protoStr}`;
     // 按国家分组显示
     const byCountry = {};
     data.nodes.forEach(n => { (byCountry[n.country] = byCountry[n.country] || []).push(n); });
