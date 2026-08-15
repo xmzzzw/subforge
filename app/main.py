@@ -1,8 +1,9 @@
 """subforge 主入口 —— FastAPI 应用。"""
 import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, FileResponse
 
 from .core.pipeline import Pipeline
 from .models.profile import ConvertRequest, Profile
@@ -20,6 +21,7 @@ from .validators.mihomo import MihomoValidator
 from .validators.surge import SurgeValidator
 
 DATA_DIR = os.environ.get("SUBFORGE_DATA_DIR", os.path.expanduser("~/.subforge"))
+FRONTEND_DIR = os.environ.get("SUBFORGE_FRONTEND_DIR", str(Path(__file__).parent.parent / "frontend"))
 
 # 创建应用
 app = FastAPI(
@@ -52,6 +54,15 @@ pipeline.add_transform(CountryGroupBuilder())
 
 # Profile 存储
 profile_store = ProfileStore(DATA_DIR)
+
+
+@app.get("/")
+def index():
+    """Web UI 首页"""
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return PlainTextResponse("subforge API — 请部署 frontend/index.html")
 
 
 @app.get("/api/health")

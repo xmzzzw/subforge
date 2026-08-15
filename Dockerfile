@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic pyyaml reque
 
 # 复制代码
 COPY app/ ./app/
+COPY frontend/ ./frontend/
 
 # 数据目录
 ENV SUBFORGE_DATA_DIR=/data
