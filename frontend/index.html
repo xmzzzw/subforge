@@ -521,6 +521,9 @@ function importLocalFile(event) {
   reader.onload = async (e) => {
     const content = e.target.result;
     toast('解析本地文件...');
+    if (content.length > 2 && content.charCodeAt(0) === 0xFF && content.charCodeAt(1) === 0xFE) {
+      // UTF-16 BOM 处理
+    }
     try {
       const nodeData = await api('/api/nodes', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ source:content, source_type:'auto', target:'clash', transforms:{ merge_single:true, protocol_tag:false } })});
@@ -549,10 +552,25 @@ function renderNodePreview() {
   allNodes.forEach(n => { (byCountry[n.country]=byCountry[n.country]||[]).push(n); });
   el.innerHTML = Object.entries(byCountry).sort((a,b)=>b[1].length-a[1].length).map(([c,ns])=>`
     <div style="margin-bottom:8px"><b style="color:var(--primary)">${c}</b> <span style="color:var(--muted);font-size:11px">(${ns.length})</span>
-    <div style="margin-top:3px">${ns.map(n=>`<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g,'&quot;')})">${n.name}</span>`).join(' ')}</div></div>`).join('');
+    <div style="margin-top:3px">${ns.map(n=>`<span class="node-tag" onclick="showNodeDetail('${encodeURIComponent(JSON.stringify(n))}')">${esc(n.name)}</span>`).join(' ')}</div></div>`).join('');
+}
+
+// HTML 转义（防止特殊字符破坏）
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ============ 世界地图（SVG 点阵）============
+// 简化大陆轮廓（viewBox 800x400）
+const WORLD_LAYER = `
+  <g fill="#152238" stroke="#1d3557" stroke-width="1">
+    <path d="M20,180 L60,170 L95,145 L120,140 L135,155 L150,140 L170,130 L185,90 L200,75 L220,80 L230,60 L270,55 L290,80 L300,120 L280,150 L250,160 L265,180 L250,200 L230,195 L220,175 L200,180 L185,200 L170,195 L160,180 L140,175 L120,190 L90,200 L60,210 Z"/>
+    <path d="M60,240 L100,220 L140,210 L170,220 L160,240 L140,255 L120,250 L100,260 L80,255 Z"/>
+    <path d="M260,220 L290,230 L310,250 L300,270 L280,265 L260,250 Z"/>
+    <path d="M310,160 L340,140 L370,145 L380,160 L360,175 L330,175 Z"/>
+    <path d="M400,120 L440,110 L470,120 L460,140 L430,145 L410,135 Z"/>
+    <path d="M500,90 L560,80 L600,90 L620,110 L600,130 L560,125 L520,110 Z"/>
+  </g>`;
 // 国家中心坐标（简化）
 const COUNTRY_COORDS = {
   '🇭🇰 香港': [240, 148], '🇨🇳 台湾': [255, 145], '🇯🇵 日本': [270, 130],
@@ -575,28 +593,30 @@ const COUNTRY_COORDS = {
 function renderMap() {
   const svg = document.getElementById('world-map');
   document.getElementById('map-count').textContent = allNodes.length ? `(${allNodes.length} 节点)` : '';
-  if (!allNodes.length) { svg.innerHTML=''; return; }
+  if (!allNodes.length) { svg.innerHTML = WORLD_LAYER; return; }
   // 统计国家节点
   const byCountry = {};
   allNodes.forEach(n => { (byCountry[n.country]=byCountry[n.country]||[]).push(n); });
-  // 地图背景（简化大陆轮廓）
-  let dots = '';
+  // 地图背景 + 节点圆点
+  let dots = WORLD_LAYER;
   const countries = Object.entries(byCountry);
   countries.forEach(([c, ns]) => {
     const coord = COUNTRY_COORDS[c];
     if (!coord) return;
     const [x, y] = coord;
     const r = Math.min(8, 3 + ns.length * 0.8);
-    dots += `<circle class="map-point" cx="${x}" cy="${y}" r="${r}" onclick="showMapCountry('${c.replace(/'/g,"\\'")}')">
-      <title>${c} (${ns.length})</title></circle>`;
+    const encoded = encodeURIComponent(c);
+    dots += `<circle class="map-point" cx="${x}" cy="${y}" r="${r}" onclick="showMapCountry('${encoded}')">
+      <title>${esc(c)} (${ns.length})</title></circle>`;
   });
   svg.innerHTML = dots;
 }
-function showMapCountry(country) {
+function showMapCountry(encoded) {
+  const country = decodeURIComponent(encoded);
   const nodes = allNodes.filter(n => n.country === country);
   const el = document.getElementById('map-detail');
   if (!nodes.length) { el.textContent = ''; return; }
-  el.innerHTML = `<b>${country}</b> (${nodes.length} 节点): ${nodes.slice(0,8).map(n=>`<span class="node-tag">${n.name}</span>`).join(' ')}${nodes.length>8?' ...':''}`;
+  el.innerHTML = `<b>${esc(country)}</b> (${nodes.length} 节点): ${nodes.slice(0,8).map(n=>`<span class="node-tag">${esc(n.name)}</span>`).join(' ')}${nodes.length>8?' ...':''}`;
 }
 
 // ============ 规则页（塔台式）============
@@ -820,10 +840,10 @@ async function runLatency() {
     document.getElementById('latency-summary').textContent = `可达 ${s.ok}/${s.total} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
     const maxMs = Math.max(...data.results.filter(r=>r.latency>=0).map(r=>r.latency), 300);
     document.getElementById('latency-results').innerHTML = data.results.slice(0,15).map(r=>{
-      if (r.latency<0) return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px"><span>${r.name}</span><span style="color:var(--error)">超时</span></div>`;
+      if (r.latency<0) return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px"><span>${esc(r.name)}</span><span style="color:var(--error)">超时</span></div>`;
       const pct = Math.min(100, Math.round(r.latency/maxMs*100));
       const color = r.latency<150?'var(--success)':r.latency<300?'var(--warning)':'var(--error)';
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px"><span>${r.name}</span><span style="display:flex;align-items:center;gap:6px"><span style="width:80px;height:5px;background:var(--surface2);border-radius:3px"><span style="display:block;width:${pct}%;height:100%;background:${color};border-radius:3px"></span></span><span style="color:${color};min-width:45px">${r.latency}ms</span></span></div>`;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px"><span>${esc(r.name)}</span><span style="display:flex;align-items:center;gap:6px"><span style="width:80px;height:5px;background:var(--surface2);border-radius:3px"><span style="display:block;width:${pct}%;height:100%;background:${color};border-radius:3px"></span></span><span style="color:${color};min-width:45px">${r.latency}ms</span></span></div>`;
     }).join('');
   } catch(e) { toast('测速失败: ' + e.message); }
 }
@@ -851,7 +871,10 @@ async function saveProfile() {
 
 // ============ 节点详情 ============
 let _currentNode = null;
-function showNodeDetail(node) {
+function showNodeDetail(encoded) {
+  let node;
+  try { node = JSON.parse(decodeURIComponent(encoded)); }
+  catch(e) { toast('节点数据解析失败'); return; }
   _currentNode = node;
   document.getElementById('nd-title').textContent = node.name;
   document.getElementById('nd-body').innerHTML = `
