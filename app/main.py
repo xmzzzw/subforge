@@ -25,6 +25,7 @@ from .services.profile import ProfileStore
 from .services.rules import RulesetStore
 from .services.latency import test_latency, summarize
 from .services.history import HistoryStore
+from .services.strategies import StrategyStore
 from .validators.mihomo import MihomoValidator
 from .validators.surge import SurgeValidator
 
@@ -73,6 +74,9 @@ ruleset_store = RulesetStore(DATA_DIR)
 
 # 转换历史
 history_store = HistoryStore(DATA_DIR)
+
+# 策略组方案
+strategy_store = StrategyStore(DATA_DIR)
 
 
 @app.get("/")
@@ -272,6 +276,36 @@ def update_ruleset(rid: str, data: dict):
 def delete_ruleset(rid: str):
     if not ruleset_store.delete(rid):
         raise HTTPException(404, "规则集不存在")
+    return {"ok": True}
+
+
+@app.get("/api/strategies")
+def list_strategies():
+    """策略组方案（内置多套 + 自定义）"""
+    return {"strategies": strategy_store.list()}
+
+
+@app.get("/api/strategies/{key}")
+def get_strategy(key: str):
+    """获取策略组方案详情"""
+    s = strategy_store.get(key)
+    if not s:
+        raise HTTPException(404, "方案不存在")
+    return s
+
+
+@app.post("/api/strategies")
+def create_strategy(data: dict):
+    """创建自定义策略组方案"""
+    if not data.get("name") or not data.get("groups"):
+        raise HTTPException(400, "需要 name 和 groups")
+    return strategy_store.create(data)
+
+
+@app.delete("/api/strategies/{sid}")
+def delete_strategy(sid: str):
+    if not strategy_store.delete(sid):
+        raise HTTPException(404, "方案不存在")
     return {"ok": True}
 
 

@@ -28,53 +28,45 @@ body {
 /* 顶部导航 */
 header {
   background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 14px 24px; display: flex; align-items: center; gap: 16px;
+  padding: 12px 24px; display: flex; align-items: center; gap: 20px;
   position: sticky; top: 0; z-index: 100;
 }
-header h1 { font-size: 19px; display: flex; align-items: center; gap: 10px; }
+header h1 { font-size: 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 header h1 .logo { font-size: 22px; }
-.header-status { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
-.status .dot { width: 8px; height: 8px; border-radius: 50%; }
-.status.ok { color: var(--success); }
-.status.ok .dot { background: var(--success); }
-.status.err { color: var(--error); }
-.status.err .dot { background: var(--error); }
-
-/* 三步流程容器 */
-.workflow {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px 24px;
-  align-items: start;
+/* Tab 栏（塔台式） */
+.tabs { display: flex; gap: 4px; margin: 0 auto; }
+.tab-btn {
+  background: none; border: none; color: var(--muted); font-size: 14px;
+  padding: 8px 20px; border-radius: 8px; cursor: pointer; transition: all .25s;
+  display: flex; align-items: center; gap: 8px;
 }
-.step {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px;
-  position: relative;
-}
-.step-header {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 16px;
-}
-.step-num {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: var(--primary); color: #fff;
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { color: var(--primary); background: var(--surface2); font-weight: 600; }
+.tab-btn .tab-num {
+  width: 20px; height: 20px; border-radius: 50%; font-size: 11px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 14px; flex-shrink: 0;
+  background: var(--surface2); color: var(--muted);
 }
-.step-num.done { background: var(--success); }
-.step-num.inactive { background: var(--surface2); color: var(--muted); }
-.step-title { font-size: 16px; font-weight: 600; }
-.step-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.step.disabled { opacity: .55; }
+.tab-btn.active .tab-num { background: var(--primary); color: #fff; }
+.header-status { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; }
+.status.ok { color: var(--success); } .status.ok .dot { background: var(--success); }
+.status.err { color: var(--error); } .status.err .dot { background: var(--error); }
 
-/* 步骤内容 */
-.step-body { min-height: 300px; }
-.section-label { font-size: 12px; color: var(--muted); margin: 12px 0 6px; font-weight: 500; }
+/* 页面 */
+main { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.page { display: none; animation: pageFade .35s ease; }
+.page.active { display: block; }
+@keyframes pageFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+/* 卡片 */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 16px;
+}
+.card h2 { font-size: 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.card h3 { font-size: 13px; color: var(--muted); margin: 14px 0 8px; }
 
 /* 表单 */
 label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
@@ -84,14 +76,14 @@ input, select, textarea {
   margin-bottom: 10px; font-family: inherit;
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
-textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
+textarea { min-height: 70px; font-family: monospace; font-size: 12px; }
 .row { display: flex; gap: 10px; }
 .row > * { flex: 1; }
 
 /* 按钮 */
 .btn {
   background: var(--primary); color: #fff; border: none; border-radius: 8px;
-  padding: 9px 18px; font-size: 13px; cursor: pointer; transition: all .2s;
+  padding: 8px 16px; font-size: 13px; cursor: pointer; transition: all .2s;
   font-weight: 500;
 }
 .btn:hover { background: var(--primary-hover); }
@@ -101,83 +93,94 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 .btn.danger:hover { background: var(--error); color: #fff; }
 .btn.sm { padding: 5px 10px; font-size: 12px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn.next {
-  width: 100%; margin-top: 16px; padding: 11px;
-  background: var(--surface2); border: 1px solid var(--primary); color: var(--primary);
-  font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn.next:hover:not(:disabled) { background: var(--primary); color: #fff; }
-.btn.next:disabled { border-color: var(--border); color: var(--muted); }
 
-/* 列表项 */
+/* 列表 */
 .list-item {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 8px; padding: 10px 12px; margin-bottom: 6px;
   display: flex; justify-content: space-between; align-items: center;
+  transition: all .2s;
 }
+.list-item:hover { transform: translateY(-1px); border-color: var(--primary); }
 .list-item .name { font-weight: 500; font-size: 13px; }
 .list-item .meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
 .list-item .actions { display: flex; gap: 6px; }
 
 /* 空状态 */
-.empty { text-align: center; padding: 30px 10px; color: var(--muted); font-size: 13px; }
-.empty .icon { font-size: 32px; margin-bottom: 8px; }
+.empty { text-align: center; padding: 24px 10px; color: var(--muted); font-size: 13px; }
+.empty .icon { font-size: 30px; margin-bottom: 8px; }
 
 /* 节点标签 */
 .node-tag {
   display: inline-block; background: var(--surface2); border: 1px solid var(--border);
   border-radius: 5px; padding: 2px 7px; font-size: 11px; margin: 2px; color: var(--text);
-  cursor: pointer;
+  cursor: pointer; transition: all .2s;
 }
-.node-tag:hover { border-color: var(--primary); }
+.node-tag:hover { border-color: var(--primary); transform: translateY(-1px); }
 
-/* 节点预览 */
-.node-preview { max-height: 200px; overflow-y: auto; margin-top: 8px; }
-.node-preview::-webkit-scrollbar { width: 6px; }
-.node-preview::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.country-group { margin-bottom: 8px; }
-.country-group .country-name { color: var(--primary); font-size: 12px; font-weight: 600; }
-.country-group .country-count { color: var(--muted); font-size: 11px; }
-
-/* 导出结果 */
-.preview {
-  background: #0d0f14; border: 1px solid var(--border); border-radius: 8px;
-  padding: 12px; overflow: auto; max-height: 300px; font-size: 11px;
-  font-family: "SF Mono", Consolas, monospace; line-height: 1.5; margin-top: 10px;
+/* 策略组 */
+.groups-list { font-size: 12px; }
+.group-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; margin-bottom: 4px; overflow: hidden;
+  transition: all .2s;
 }
-.action-row { display: flex; gap: 8px; margin-top: 12px; }
-.action-row .btn { flex: 1; }
-
-/* 二维码 */
-#qr-img { display: block; margin: 8px auto; max-width: 160px; border: 3px solid #fff; border-radius: 8px; }
-.qr-section { text-align: center; margin-top: 10px; }
-
-/* 延迟条 */
-.latency-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.latency-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; max-width: 120px; }
-.latency-fill { height: 100%; border-radius: 3px; }
-.latency-ms { min-width: 48px; text-align: right; font-size: 11px; }
-
-/* 规则集项 */
-.ruleset-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
-.ruleset-item input[type=checkbox] { width: auto; margin: 0; }
-
-/* 过渡动画 */
-.step { transition: opacity .3s ease, transform .3s ease; }
-.step.disabled { opacity: .55; transform: scale(.99); }
-.step:not(.disabled) { animation: stepFade .35s ease; }
-@keyframes stepFade {
-  from { opacity: .4; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.group-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 10px; cursor: pointer; transition: background .2s;
 }
-.list-item, .group-item, .client-option {
-  transition: background .2s, border-color .2s, transform .2s, opacity .2s;
+.group-head:hover { background: rgba(79,140,255,.08); }
+.group-head .g-name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.group-head .g-check { cursor: pointer; }
+.group-head .g-type { color: var(--muted); font-size: 10px; padding: 1px 6px; background: var(--surface); border-radius: 4px; }
+.group-head .g-arrow { transition: transform .25s; color: var(--muted); font-size: 10px; }
+.group-item.open .g-arrow { transform: rotate(90deg); }
+.group-members { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.group-item.open .group-members { max-height: 300px; }
+.group-members-inner {
+  padding: 6px 10px 10px; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 4px;
 }
-.list-item:hover, .client-option:hover { transform: translateY(-1px); }
-.node-tag { transition: all .2s; }
-.node-tag:hover { transform: translateY(-1px); }
-#node-preview, #groups-list { transition: opacity .3s; }
-.empty { animation: stepFade .3s ease; }
+.member-tag {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px; font-size: 10px; color: var(--text);
+}
+.group-item.disabled-group { opacity: .4; }
+
+/* 客户端选择器 */
+.client-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.client-option {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer;
+  transition: all .2s;
+}
+.client-option:hover { border-color: var(--primary); transform: translateY(-2px); }
+.client-option.active { border-color: var(--primary); background: rgba(79,140,255,.1); }
+.client-logo {
+  width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 6px;
+  object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,.3); background: var(--surface2);
+}
+.client-name { font-size: 12px; font-weight: 600; }
+.client-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* 地图 */
+.map-wrap { position: relative; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #0d1526; }
+#world-map { width: 100%; height: auto; display: block; }
+.map-point { fill: var(--primary); opacity: .6; cursor: pointer; transition: all .2s; }
+.map-point:hover { fill: var(--warning); opacity: 1; r: 6; }
+.map-point-label { font-size: 10px; fill: var(--text); pointer-events: none; }
+.map-legend { position: absolute; top: 8px; right: 10px; background: rgba(0,0,0,.6); padding: 4px 8px; border-radius: 6px; font-size: 10px; color: var(--muted); }
+
+/* 方案选择 */
+.strategy-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin-bottom: 8px; cursor: pointer; transition: all .2s;
+}
+.strategy-card:hover { border-color: var(--primary); }
+.strategy-card.active { border-color: var(--primary); background: rgba(79,140,255,.08); }
+.strategy-card .s-name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.strategy-card .s-desc { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.strategy-card .s-groups { color: var(--muted); font-size: 10px; margin-top: 4px; }
 
 /* 提示 */
 .toast {
@@ -189,235 +192,164 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 .toast.show { display: block; animation: slideUp .3s; }
 @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; } }
 
-/* 策略组展开 */
-.groups-list { font-size: 12px; }
-.group-item {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 6px; margin-bottom: 4px; overflow: hidden;
-}
-.group-head {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 7px 10px; cursor: pointer; transition: background .2s;
-}
-.group-head:hover { background: rgba(79,140,255,.08); }
-.group-head .g-name { font-weight: 600; }
-.group-head .g-type { color: var(--muted); font-size: 10px; padding: 1px 6px; background: var(--surface); border-radius: 4px; }
-.group-head .g-arrow { transition: transform .25s; color: var(--muted); }
-.group-item.open .g-arrow { transform: rotate(90deg); }
-.group-members {
-  max-height: 0; overflow: hidden; transition: max-height .3s ease;
-}
-.group-item.open .group-members { max-height: 300px; }
-.group-members-inner {
-  padding: 6px 10px 10px; border-top: 1px solid var(--border);
-  display: flex; flex-wrap: wrap; gap: 4px;
-}
-.group-members-inner .member-tag {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 4px; padding: 2px 6px; font-size: 10px; color: var(--text);
-}
-
-/* 客户端选择器 */
-.client-picker {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.client-option {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 12px 8px; text-align: center;
-  cursor: pointer; transition: all .2s;
-}
-.client-option:hover { border-color: var(--primary); transform: translateY(-2px); }
-.client-option.active { border-color: var(--primary); background: rgba(79,140,255,.1); }
-.client-logo {
-  width: 40px; height: 40px; border-radius: 50%;
-  margin: 0 auto 6px; display: flex; align-items: center; justify-content: center;
-  object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  background: var(--surface2);
-}
-.client-name { font-size: 12px; font-weight: 600; }
-.client-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-
 /* 响应式 */
-@media (max-width: 1024px) {
-  .workflow { grid-template-columns: 1fr; }
-  .step-body { min-height: auto; }
+@media (max-width: 768px) {
+  .row { flex-direction: column; }
+  .tabs { gap: 2px; }
+  .tab-btn { padding: 6px 10px; font-size: 12px; }
   .client-picker { grid-template-columns: repeat(3, 1fr); }
+  header { flex-wrap: wrap; gap: 8px; }
 }
 </style>
 </head>
 <body>
 <header>
   <h1><span class="logo">⚒️</span> subforge</h1>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="subscriptions" onclick="switchTab('subscriptions')">
+      <span class="tab-num">1</span> 订阅
+    </button>
+    <button class="tab-btn" data-tab="rules" onclick="switchTab('rules')">
+      <span class="tab-num">2</span> 规则
+    </button>
+    <button class="tab-btn" data-tab="export" onclick="switchTab('export')">
+      <span class="tab-num">3</span> 导出
+    </button>
+  </nav>
   <div class="header-status">
-    <span class="status ok" id="header-health"><span class="dot"></span>服务正常</span>
-    <button class="btn sm secondary" onclick="clearHistory()" title="清空历史">清空历史</button>
+    <span class="status ok" id="header-health"><span class="dot"></span>正常</span>
   </div>
 </header>
 
-<main class="workflow">
-  <!-- ============ 步骤 1：订阅导入 ============ -->
-  <section class="step" id="step-1">
-    <div class="step-header">
-      <div class="step-num active" id="step1-num">1</div>
-      <div>
-        <div class="step-title">订阅导入</div>
-        <div class="step-sub">导入机场订阅，自动识别节点</div>
-      </div>
-    </div>
-    <div class="step-body">
-      <div class="section-label">订阅 URL（可多个，每行一个）</div>
+<main>
+  <!-- ============ 页面 1：订阅 ============ -->
+  <div class="page active" id="page-subscriptions">
+    <div class="card">
+      <h2>📡 订阅导入</h2>
+      <label>订阅 URL（可多个，每行一个；[机场A]|URL 带前缀）</label>
       <textarea id="sub-urls" placeholder="https://机场订阅链接&#10;[机场A]|https://机场2链接"></textarea>
       <div class="row">
-        <button class="btn secondary sm" onclick="importSubscription()">导入订阅</button>
-        <button class="btn secondary sm" onclick="loadDemoSub()">示例</button>
+        <button class="btn" onclick="importSubscription()">导入订阅</button>
+        <button class="btn secondary" onclick="document.getElementById('file-input').click()">📁 本地文件导入</button>
+        <input type="file" id="file-input" accept=".yaml,.conf,.txt,.list" style="display:none" onchange="importLocalFile(event)">
       </div>
-
-      <div class="section-label">已导入订阅</div>
-      <div id="sub-list"><div class="empty"><div class="icon">📡</div>还没有导入订阅<br>粘贴订阅链接后点「导入订阅」</div></div>
-
-      <div class="section-label">节点预览（<span id="node-count">0</span> 节点）</div>
-      <div class="node-preview" id="node-preview"><div class="empty">导入订阅后显示节点</div></div>
-
-      <button class="btn next" id="btn-step1-next" onclick="goStep2()" disabled>
-        继续：选择规则 <span>→</span>
-      </button>
+      <div id="sub-status" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
     </div>
-  </section>
 
-  <!-- ============ 步骤 2：规则配置 ============ -->
-  <section class="step disabled" id="step-2">
-    <div class="step-header">
-      <div class="step-num inactive" id="step2-num">2</div>
-      <div>
-        <div class="step-title">规则配置</div>
-        <div class="step-sub">选择策略组 + 转换选项</div>
+    <div class="card">
+      <h2>🗺️ 节点分布 <span id="map-count" style="color:var(--muted);font-size:12px"></span></h2>
+      <div class="map-wrap">
+        <svg id="world-map" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-legend">点击圆点查看国家节点</div>
+      </div>
+      <div id="map-detail" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 节点列表（<span id="node-count">0</span> 节点）</h2>
+      <div id="node-preview"><div class="empty"><div class="icon">📡</div>导入订阅后显示节点</div></div>
+    </div>
+  </div>
+
+  <!-- ============ 页面 2：规则 ============ -->
+  <div class="page" id="page-rules">
+    <div class="card">
+      <h2>🎛️ 策略组方案</h2>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:10px">选择一套策略组方案，或导入自定义方案</p>
+      <div id="strategy-list"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn sm" onclick="document.getElementById('strategy-file').click()">+ 导入自定义方案</button>
+        <input type="file" id="strategy-file" accept=".json,.yaml,.yml" style="display:none" onchange="importStrategy(event)">
+        <button class="btn sm secondary" onclick="importStrategyJson()">粘贴 JSON</button>
+      </div>
+      <div id="strategy-status" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 导入的策略组 <button class="btn sm secondary" style="margin-left:8px" onclick="toggleAllGroups()" id="groups-toggle">全部展开</button></h2>
+      <div id="groups-list" class="groups-list" style="max-height:280px;overflow-y:auto">
+        <div class="empty">导入订阅后显示该订阅的策略组（可勾选启用）</div>
       </div>
     </div>
-    <div class="step-body">
-      <!-- 导入的策略组（塔台式展开查看） -->
-      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
-        <span>📋 导入的策略组（<span id="groups-count">0</span>）</span>
-        <button class="btn sm secondary" id="groups-toggle" onclick="toggleGroups()">全部展开</button>
-      </div>
-      <div id="groups-list" class="groups-list" style="max-height:200px;overflow-y:auto;margin-bottom:8px">
-        <div class="empty" style="padding:16px">导入订阅后这里会显示该订阅的策略组</div>
-      </div>
 
-      <!-- 常用策略组（参考塔台） -->
-      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
-        <span>⭐ 常用策略组</span>
-        <button class="btn sm secondary" id="common-groups-toggle" onclick="toggleCommonGroups()">全部展开</button>
+    <div class="card">
+      <h2>⚙️ 转换选项</h2>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;margin:0">
+          <input type="checkbox" id="opt-merge" checked style="width:auto;margin:0"> 单节点国家合并
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0">
+          <input type="checkbox" id="opt-tag" checked style="width:auto;margin:0"> 协议标注
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0">
+          <input type="checkbox" id="opt-auto" checked style="width:auto;margin:0"> 自动选择
+        </label>
       </div>
-      <div id="common-groups" class="groups-list" style="max-height:220px;overflow-y:auto;margin-bottom:8px"></div>
-
-      <div class="section-label">转换选项</div>
-      <div class="ruleset-item">
-        <input type="checkbox" id="opt-merge" checked>
-        <label style="margin:0">单节点国家合并到其他地区</label>
-      </div>
-      <div class="ruleset-item">
-        <input type="checkbox" id="opt-tag" checked>
-        <label style="margin:0">节点名加协议标注 [ss]/[trojan]</label>
-      </div>
-      <div class="ruleset-item">
-        <input type="checkbox" id="opt-auto" checked>
-        <label style="margin:0">国家分组带自动选择（url-test）</label>
-      </div>
-
-      <div class="section-label">规则集（勾选要启用的）</div>
-      <div id="ruleset-checkboxes" style="max-height:140px;overflow-y:auto">
-        <div class="empty">加载中...</div>
-      </div>
-
-      <div class="section-label">节点筛选（可选）</div>
-      <div class="row">
+      <div class="row" style="margin-top:10px">
         <div><label>只保留</label><input id="opt-include" placeholder="香港,美国"></div>
         <div><label>排除</label><input id="opt-exclude" placeholder="澳门,广告"></div>
       </div>
-
-      <button class="btn next" id="btn-step2-next" onclick="goStep3()" disabled>
-        继续：选择客户端导出 <span>→</span>
-      </button>
     </div>
-  </section>
+  </div>
 
-  <!-- ============ 步骤 3：导出 ============ -->
-  <section class="step disabled" id="step-3">
-    <div class="step-header">
-      <div class="step-num inactive" id="step3-num">3</div>
-      <div>
-        <div class="step-title">导出</div>
-        <div class="step-sub">选择客户端格式，生成配置</div>
-      </div>
-    </div>
-    <div class="step-body">
-      <div class="section-label">目标客户端</div>
+  <!-- ============ 页面 3：导出 ============ -->
+  <div class="page" id="page-export">
+    <div class="card">
+      <h2>🎯 选择客户端</h2>
       <div class="client-picker" id="client-picker">
-        <div class="client-option" data-target="clash" onclick="selectClient('clash')">
-          <img class="client-logo" src="/logos/clash.png" alt="Clash">
-          <div class="client-name">Clash</div>
-          <div class="client-desc">全平台</div>
+        <div class="client-option active" data-target="clash" onclick="selectClient('clash')">
+          <img class="client-logo" src="/logos/clash.png" alt="Clash"><div class="client-name">Clash</div><div class="client-desc">全平台</div>
         </div>
         <div class="client-option" data-target="surge" onclick="selectClient('surge')">
-          <img class="client-logo" src="/logos/surge.png" alt="Surge">
-          <div class="client-name">Surge</div>
-          <div class="client-desc">Mac/iOS</div>
+          <img class="client-logo" src="/logos/surge.png" alt="Surge"><div class="client-name">Surge</div><div class="client-desc">Mac/iOS</div>
         </div>
         <div class="client-option" data-target="loon" onclick="selectClient('loon')">
-          <img class="client-logo" src="/logos/loon.png" alt="Loon">
-          <div class="client-name">Loon</div>
-          <div class="client-desc">iOS</div>
+          <img class="client-logo" src="/logos/loon.png" alt="Loon"><div class="client-name">Loon</div><div class="client-desc">iOS</div>
         </div>
         <div class="client-option" data-target="quanx" onclick="selectClient('quanx')">
-          <img class="client-logo" src="/logos/quantumultx.png" alt="Quantumult X">
-          <div class="client-name">QuanX</div>
-          <div class="client-desc">iOS</div>
+          <img class="client-logo" src="/logos/quantumultx.png" alt="QuanX"><div class="client-name">QuanX</div><div class="client-desc">iOS</div>
         </div>
         <div class="client-option" data-target="shadowrocket" onclick="selectClient('shadowrocket')">
-          <img class="client-logo" src="/logos/shadowrocket.png" alt="Shadowrocket">
-          <div class="client-name">Shadowrocket</div>
-          <div class="client-desc">iOS</div>
+          <img class="client-logo" src="/logos/shadowrocket.png" alt="Shadowrocket"><div class="client-name">Shadowrocket</div><div class="client-desc">iOS</div>
         </div>
         <div class="client-option" data-target="singbox" onclick="selectClient('singbox')">
-          <img class="client-logo" src="/logos/singbox.png" alt="sing-box">
-          <div class="client-name">sing-box</div>
-          <div class="client-desc">全平台</div>
+          <img class="client-logo" src="/logos/singbox.png" alt="sing-box"><div class="client-name">sing-box</div><div class="client-desc">全平台</div>
         </div>
       </div>
-      <select id="export-target" style="display:none"></select>
-
-      <div class="action-row">
+      <div class="row">
         <button class="btn" onclick="generateConfig()">生成配置</button>
-        <button class="btn secondary" onclick="previewNodes()">节点预览</button>
         <button class="btn secondary" onclick="runLatency()">测速</button>
-      </div>
-
-      <div id="latency-summary" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
-      <div id="latency-results" style="margin-top:4px"></div>
-
-      <div id="export-result" style="display:none">
-        <div class="section-label">生成的配置</div>
-        <pre class="preview" id="config-preview"></pre>
-        <div class="action-row">
-          <button class="btn secondary" onclick="copyResult()">复制</button>
-          <button class="btn secondary" onclick="downloadResult()">下载</button>
-          <button class="btn secondary" onclick="genConfigQr()">二维码</button>
-        </div>
-        <div class="qr-section" id="qr-box" style="display:none">
-          <img id="qr-img" alt="二维码">
-          <div style="font-size:11px;color:var(--muted)" id="qr-content"></div>
-        </div>
-      </div>
-
-      <div class="action-row" style="margin-top:20px">
-        <button class="btn secondary" onclick="saveProfile()">保存为配置档案</button>
-        <button class="btn secondary" onclick="testCurrent()">测试订阅</button>
+        <button class="btn secondary" onclick="saveProfile()">保存档案</button>
       </div>
     </div>
-  </section>
+
+    <div class="card">
+      <h2>📄 生成结果</h2>
+      <div id="export-result" style="display:none">
+        <pre class="preview" id="config-preview" style="background:#0d0f14;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;max-height:300px;font-size:11px;font-family:monospace;line-height:1.5;margin-bottom:10px"></pre>
+        <div class="row">
+          <button class="btn secondary" onclick="copyResult()">📋 复制</button>
+          <button class="btn secondary" onclick="downloadResult()">💾 下载</button>
+          <button class="btn secondary" onclick="genSubQr()">📱 订阅二维码</button>
+        </div>
+      </div>
+      <div id="no-result" style="margin-top:10px"><div class="empty">先生成配置</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📱 二维码</h2>
+      <div id="qr-box" style="text-align:center;display:none">
+        <img id="qr-img" style="max-width:200px;border:3px solid #fff;border-radius:8px">
+        <div id="qr-content" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📊 测速结果</h2>
+      <div id="latency-summary" style="font-size:12px;color:var(--muted)"></div>
+      <div id="latency-results" style="margin-top:8px"></div>
+    </div>
+  </div>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -429,7 +361,6 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
     <div id="nd-body" style="font-size:13px;line-height:1.8"></div>
     <div style="margin-top:16px;display:flex;gap:12px">
       <button class="btn sm" onclick="copyNodeUri()">复制 URI</button>
-      <button class="btn sm secondary" onclick="genNodeQrFromDetail()">二维码</button>
       <button class="btn sm secondary" onclick="closeNodeDetail()">关闭</button>
     </div>
   </div>
@@ -438,417 +369,315 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 <script>
 // ============ 全局状态 ============
 const API = '';
-let allNodes = [];       // 步骤1 导入的节点
-let allGroups = [];      // 策略组结构
-let currentNodeList = []; // 转换后的节点
-let currentConfig = '';  // 生成的配置
+let allNodes = [];        // 导入的节点
+let allGroups = [];       // 导入的策略组
+let currentConfig = '';   // 生成的配置
 let currentTarget = 'clash';
-let selectedRulesets = new Set(); // 勾选的规则集
-let profileId = null;   // 保存档案后的 id
+let selectedStrategy = 'myrulesets';  // 选中的方案
+let selectedGroups = new Set();  // 勾选的策略组
+let groupsExpanded = false;
+let profileName = '';
 
 // ============ 基础 ============
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-async function api(path, opts = {}) {
-  const res = await fetch(API + path, opts);
-  if (!res.ok) {
-    const err = await res.text().catch(() => '');
-    throw new Error(err || res.statusText);
-  }
-  const ct = res.headers.get('content-type') || '';
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+async function api(path, opts={}) {
+  const res = await fetch(API+path, opts);
+  if (!res.ok) { const err = await res.text().catch(()=>''); throw new Error(err||res.statusText); }
+  const ct = res.headers.get('content-type')||'';
   return ct.includes('json') ? res.json() : res.text();
 }
 
-// ============ 步骤切换 ============
-function setStep(n, active) {
-  const steps = [1, 2, 3];
-  steps.forEach(i => {
-    const el = document.getElementById('step-' + i);
-    const num = document.getElementById('step' + i + '-num');
-    if (i < n) {
-      el.classList.remove('disabled');
-      num.className = 'step-num done';
-      num.textContent = '✓';
-    } else if (i === n) {
-      el.classList.remove('disabled');
-      num.className = 'step-num active';
-      num.textContent = i;
-    } else {
-      el.classList.add('disabled');
-      num.className = 'step-num inactive';
-      num.textContent = i;
-    }
-  });
-}
-function goStep2() {
-  setStep(2);
-  renderGroups();
-  renderCommonGroups();
-  loadRulesetCheckboxes();
-  document.getElementById('step-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-function goStep3() {
-  setStep(3);
-  document.getElementById('step-3').scrollIntoView({ behavior: 'smooth', block: 'start' });
+// ============ Tab 切换 ============
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id==='page-'+tab));
+  if (tab === 'rules') { renderStrategyList(); renderGroups(); }
+  if (tab === 'export') { renderClientPicker(); }
 }
 
-// ============ 步骤 1：订阅导入 ============
+// ============ 订阅导入 ============
 async function importSubscription() {
-  const rawLines = document.getElementById('sub-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
-  if (!rawLines.length) { toast('请先粘贴订阅 URL'); return; }
-
+  const lines = document.getElementById('sub-urls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!lines.length) { toast('请先粘贴订阅 URL'); return; }
   toast('导入订阅中...');
-  // 解析 [前缀]|URL
-  const subs = rawLines.map(line => {
-    let prefix = null, url = line;
-    if (line.includes('|')) {
-      const [p, u] = line.split('|');
-      prefix = p.trim() || null; url = u.trim();
-    }
-    return { url, prefix };
-  });
-
-  // 逐个拉取并聚合
-  let allNodeList = [];
-  let errors = [];
+  const subs = lines.map(l => { let prefix=null, url=l; if(l.includes('|')){[prefix,url]=l.split('|');prefix=(prefix||'').trim()||null;} return {url,prefix}; });
+  let allNodeList=[], errors=[];
   for (const sub of subs) {
     try {
-      // 通过 /api/nodes 拉取并解析节点（后端处理 URL 拉取）
-      const nodeData = await api('/api/nodes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source: sub.url, source_type: 'url', target: 'clash',
-          transforms: { merge_single: true, protocol_tag: false }
-        })
-      });
-      const nodes = nodeData.nodes.map(n => ({ ...n, prefix: sub.prefix }));
+      const nodeData = await api('/api/nodes', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ source:sub.url, source_type:'url', target:'clash', transforms:{ merge_single:true, protocol_tag:false } })});
+      const nodes = nodeData.nodes.map(n=>({...n,prefix:sub.prefix}));
       allNodeList = allNodeList.concat(nodes);
-      // 保存策略组结构（取第一个有数据的）
-      if (nodeData.groups && nodeData.groups.length && !allGroups.length) {
-        allGroups = nodeData.groups;
-      }
-    } catch (e) {
-      errors.push(`${sub.url.split('/')[2]||'?'}: ${e.message}`);
-    }
+      if (nodeData.groups && nodeData.groups.length && !allGroups.length) allGroups = nodeData.groups;
+      if (nodeData.countries) allCountryCount = nodeData.countries;
+    } catch(e) { errors.push(`${sub.url.split('/')[2]||'?'}: ${e.message}`); }
   }
-
   allNodes = allNodeList;
-  renderSubList(subs, errors);
-  renderNodePreview();
-  renderGroups();
-  toast(`导入完成: ${allNodes.length} 个节点${errors.length ? `, ${errors.length} 个订阅失败` : ''}`);
-  updateStep1Next();
+  renderNodePreview(); renderMap(); renderSubStatus(subs.length, errors);
+  toast(`导入完成: ${allNodes.length} 节点${errors.length?`, ${errors.length} 失败`:''}`);
 }
 
-function renderSubList(subs, errors) {
-  const el = document.getElementById('sub-list');
-  if (!subs.length && !errors.length) { el.innerHTML = '<div class="empty">无订阅</div>'; return; }
-  el.innerHTML = subs.map(s => `
-    <div class="list-item">
-      <div>
-        <div class="name">${s.prefix ? s.prefix : '订阅'}</div>
-        <div class="meta">${s.url.split('/')[2] || s.url}</div>
-      </div>
-    </div>`).join('')
-    + (errors.length ? `<div style="color:var(--warning);font-size:11px;margin-top:8px;line-height:1.6">⚠️ 导入失败：${errors.join('<br>')}</div>` : '');
+// 本地文件导入
+function importLocalFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const content = e.target.result;
+    toast('解析本地文件...');
+    try {
+      const nodeData = await api('/api/nodes', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ source:content, source_type:'auto', target:'clash', transforms:{ merge_single:true, protocol_tag:false } })});
+      allNodes = nodeData.nodes;
+      if (nodeData.groups) allGroups = nodeData.groups;
+      if (nodeData.countries) allCountryCount = nodeData.countries;
+      renderNodePreview(); renderMap();
+      toast(`本地文件解析: ${allNodes.length} 节点`);
+    } catch(err) { toast('解析失败: ' + err.message); }
+  };
+  reader.readAsText(file);
 }
 
+let allCountryCount = {};
+function renderSubStatus(subs, errors) {
+  const el = document.getElementById('sub-status');
+  el.innerHTML = `已导入 ${allNodes.length} 节点${errors.length?` <span style="color:var(--warning)">(${errors.length} 个订阅失败: ${errors.join('; ')})</span>`:''}`;
+}
+
+// ============ 节点预览 ============
 function renderNodePreview() {
   const el = document.getElementById('node-preview');
   document.getElementById('node-count').textContent = allNodes.length;
-  if (!allNodes.length) { el.innerHTML = '<div class="empty">导入订阅后显示节点</div>'; return; }
-
-  // 按国家分组
+  if (!allNodes.length) { el.innerHTML='<div class="empty"><div class="icon">📡</div>导入订阅后显示节点</div>'; return; }
   const byCountry = {};
-  allNodes.forEach(n => { (byCountry[n.country] = byCountry[n.country] || []).push(n); });
-  let html = '';
-  Object.entries(byCountry).sort((a, b) => b[1].length - a[1].length).forEach(([country, nodes]) => {
-    html += `<div class="country-group">
-      <span class="country-name">${country}</span> <span class="country-count">(${nodes.length})</span>
-      <div style="margin-top:3px">${nodes.map(n =>
-        `<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g, '&quot;')})">${n.name}</span>`
-      ).join(' ')}</div>
-    </div>`;
+  allNodes.forEach(n => { (byCountry[n.country]=byCountry[n.country]||[]).push(n); });
+  el.innerHTML = Object.entries(byCountry).sort((a,b)=>b[1].length-a[1].length).map(([c,ns])=>`
+    <div style="margin-bottom:8px"><b style="color:var(--primary)">${c}</b> <span style="color:var(--muted);font-size:11px">(${ns.length})</span>
+    <div style="margin-top:3px">${ns.map(n=>`<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g,'&quot;')})">${n.name}</span>`).join(' ')}</div></div>`).join('');
+}
+
+// ============ 世界地图（SVG 点阵）============
+// 国家中心坐标（简化）
+const COUNTRY_COORDS = {
+  '🇭🇰 香港': [240, 148], '🇨🇳 台湾': [255, 145], '🇯🇵 日本': [270, 130],
+  '🇰🇷 韩国': [265, 125], '🇸🇬 新加坡': [250, 175], '🇮🇩 印尼': [250, 195],
+  '🇵🇭 菲律宾': [260, 165], '🇻🇳 越南': [250, 158], '🇹🇭 泰国': [245, 168],
+  '🇲🇾 马来西亚': [252, 180], '🇮🇳 印度': [220, 165], '🇵🇰 巴基斯坦': [210, 155],
+  '🇺🇸 美国': [110, 140], '🇨🇦 加拿大': [100, 110], '🇲🇽 墨西哥': [100, 170],
+  '🇧🇷 巴西': [75, 230], '🇦🇷 阿根廷': [80, 265], '🇨🇱 智利': [78, 270],
+  '🇬🇧 英国': [175, 85], '🇫🇷 法国': [180, 100], '🇩🇪 德国': [185, 90],
+  '🇳🇱 荷兰': [183, 88], '🇧🇪 比利时': [182, 92], '🇮🇹 意大利': [190, 115],
+  '🇪🇸 西班牙': [175, 120], '🇵🇹 葡萄牙': [170, 122], '🇨🇭 瑞士': [185, 105],
+  '🇦🇹 奥地利': [190, 100], '🇭🇺 匈牙利': [193, 100], '🇨🇿 捷克': [190, 95],
+  '🇵🇱 波兰': [195, 90], '🇸🇪 瑞典': [190, 70], '🇳🇴 挪威': [185, 65],
+  '🇩🇰 丹麦': [188, 78], '🇫🇮 芬兰': [200, 68], '🇬🇷 希腊': [200, 125],
+  '🇹🇷 土耳其': [210, 130], '🇷🇺 俄罗斯': [225, 75], '🇺🇦 乌克兰': [205, 95],
+  '🇮🇪 爱尔兰': [170, 80], '🇦🇺 澳大利亚': [285, 250], '🇳🇿 新西兰': [310, 260],
+  '🇦🇪 阿联酋': [220, 145], '🇮🇱 以色列': [215, 135], '🇪🇬 埃及': [200, 155],
+  '🇿🇦 南非': [205, 260], '🇳🇬 尼日利亚': [195, 190], '🇲🇩 摩尔多瓦': [200, 98],
+};
+function renderMap() {
+  const svg = document.getElementById('world-map');
+  document.getElementById('map-count').textContent = allNodes.length ? `(${allNodes.length} 节点)` : '';
+  if (!allNodes.length) { svg.innerHTML=''; return; }
+  // 统计国家节点
+  const byCountry = {};
+  allNodes.forEach(n => { (byCountry[n.country]=byCountry[n.country]||[]).push(n); });
+  // 地图背景（简化大陆轮廓）
+  let dots = '';
+  const countries = Object.entries(byCountry);
+  countries.forEach(([c, ns]) => {
+    const coord = COUNTRY_COORDS[c];
+    if (!coord) return;
+    const [x, y] = coord;
+    const r = Math.min(8, 3 + ns.length * 0.8);
+    dots += `<circle class="map-point" cx="${x}" cy="${y}" r="${r}" onclick="showMapCountry('${c.replace(/'/g,"\\'")}')">
+      <title>${c} (${ns.length})</title></circle>`;
   });
-  el.innerHTML = html;
-  // 有节点就启用步骤2
-  document.getElementById('btn-step1-next').disabled = allNodes.length === 0;
+  svg.innerHTML = dots;
+}
+function showMapCountry(country) {
+  const nodes = allNodes.filter(n => n.country === country);
+  const el = document.getElementById('map-detail');
+  if (!nodes.length) { el.textContent = ''; return; }
+  el.innerHTML = `<b>${country}</b> (${nodes.length} 节点): ${nodes.slice(0,8).map(n=>`<span class="node-tag">${n.name}</span>`).join(' ')}${nodes.length>8?' ...':''}`;
 }
 
-function updateStep1Next() {
-  document.getElementById('btn-step1-next').disabled = allNodes.length === 0;
-}
-
-// ============ 策略组展开查看（塔台式）============
-// 常用策略组（参考塔台 RulePolicy + 我们的规格）
-const COMMON_GROUPS = [
-  { name: '🚀 节点选择', type: 'select', desc: '顶层入口，引用所有国家分组', members: ['🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '🇨🇳 台湾', '🌍 其他地区'] },
-  { name: '♻️ 自动选择', type: 'url-test', desc: '自动测速选最快节点', members: ['🇭🇰 香港-自动', '🇺🇸 美国-自动', '🇯🇵 日本-自动', '🇸🇬 新加坡-自动', '🌍 其他地区-自动'] },
-  { name: '🤖 AI 服务', type: 'select', desc: 'AI 平台（OpenAI/Claude/Gemini/opencode）', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🌍 其他地区'] },
-  { name: '🎬 国外媒体', type: 'select', desc: 'Netflix/Disney+/HBO/YouTube 等', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🌍 其他地区'] },
-  { name: '📺 YouTube', type: 'select', desc: 'YouTube 视频', members: ['Proxies', '🎯Direct', '🇺🇸 美国', '🇯🇵 日本', '🇭🇰 香港'] },
-  { name: '💬 Telegram', type: 'select', desc: 'Telegram 消息', members: ['Proxies', '🎯Direct', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
-  { name: '🇨🇳 国内流量', type: 'select', desc: '国内网站直连', members: ['DIRECT', 'Proxies'] },
-  { name: '🌐 国际流量', type: 'select', desc: '国外流量走代理', members: ['Proxies', '🎯Direct'] },
-  { name: '🍎 苹果服务', type: 'select', desc: 'Apple 服务', members: ['DIRECT', 'Proxies', '🇺🇸 美国'] },
-  { name: 'Ⓜ️ 微软服务', type: 'select', desc: 'Microsoft 服务', members: ['Proxies', '🎯Direct', '🇺🇸 美国'] },
-  { name: '🔍 谷歌服务', type: 'select', desc: 'Google 服务', members: ['Proxies', '🎯Direct', '🇺🇸 美国'] },
-  { name: '🚫 广告拦截', type: 'select', desc: '拦截广告', members: ['REJECT', 'DIRECT'] },
-  { name: '🎯 全球直连', type: 'select', desc: '强制直连', members: ['DIRECT'] },
-  { name: '✈️ Final', type: 'select', desc: '最终兜底', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🌍 其他地区'] },
-];
-
-let groupsExpanded = false;
-let commonGroupsExpanded = false;
-function renderGroups() {
-  const count = document.getElementById('groups-count');
-  const list = document.getElementById('groups-list');
-  if (!allGroups.length) {
-    count.textContent = 0;
-    list.innerHTML = '<div class="empty" style="padding:16px">导入订阅后这里会显示该订阅的策略组</div>';
-    return;
-  }
-  count.textContent = allGroups.length;
-  renderGroupsList();
-}
-function renderGroupsList() {
-  const list = document.getElementById('groups-list');
-  list.innerHTML = allGroups.map((g, idx) => `
-    <div class="group-item ${groupsExpanded ? 'open' : ''}" id="g-item-${idx}">
-      <div class="group-head" onclick="toggleGroup(${idx})">
-        <span class="g-name">${g.name}</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <span class="g-type">${g.type} · ${g.members.length}</span>
-          <span class="g-arrow">▶</span>
-        </span>
-      </div>
-      <div class="group-members">
-        <div class="group-members-inner">
-          ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
-        </div>
-      </div>
-    </div>`).join('');
-}
-function toggleGroup(idx) {
-  const item = document.getElementById('g-item-' + idx);
-  item.classList.toggle('open');
-}
-function toggleGroups() {
-  groupsExpanded = !groupsExpanded;
-  document.getElementById('groups-toggle').textContent = groupsExpanded ? '收起全部' : '全部展开';
-  renderGroupsList();
-}
-
-// 常用策略组
-function renderCommonGroups() {
-  const list = document.getElementById('common-groups');
-  list.innerHTML = COMMON_GROUPS.map((g, idx) => `
-    <div class="group-item ${commonGroupsExpanded ? 'open' : ''}" id="cg-item-${idx}">
-      <div class="group-head" onclick="toggleCommonGroup(${idx})">
-        <span class="g-name">${g.name}</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <span class="g-type">${g.desc}</span>
-          <span class="g-arrow">▶</span>
-        </span>
-      </div>
-      <div class="group-members">
-        <div class="group-members-inner">
-          ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
-        </div>
-      </div>
-    </div>`).join('');
-}
-function toggleCommonGroup(idx) {
-  const item = document.getElementById('cg-item-' + idx);
-  item.classList.toggle('open');
-}
-function toggleCommonGroups() {
-  commonGroupsExpanded = !commonGroupsExpanded;
-  document.getElementById('common-groups-toggle').textContent = commonGroupsExpanded ? '收起全部' : '全部展开';
-  renderCommonGroups();
-}
-
-function loadDemoSub() {
-  document.getElementById('sub-urls').value = 'https://raw.githubusercontent.com/xmzzzw/my-rulesets/main/nexitallyy_Extra_AI.list';
-  toast('已填入示例（规则集，仅演示，非节点订阅）');
-}
-
-// ============ 步骤 2：规则配置 ============
-async function loadRulesetCheckboxes() {
-  const el = document.getElementById('ruleset-checkboxes');
+// ============ 策略组方案 ============
+async function renderStrategyList() {
+  const el = document.getElementById('strategy-list');
   try {
-    const data = await api('/api/rulesets');
-    // 默认勾选核心规则集
-    const defaultSelected = ['nexitallyy Extra AI', 'nexitallyy Extra CN3', 'blackmatrix7 Google', 'blackmatrix7 YouTube'];
-    el.innerHTML = data.rulesets.map(rs => {
-      const key = rs.name;
-      const checked = selectedRulesets.size === 0 && defaultSelected.includes(key) ? 'checked' : (selectedRulesets.has(key) ? 'checked' : '');
-      return `<div class="ruleset-item">
-        <input type="checkbox" id="rs-${key}" ${checked} onchange="toggleRuleset('${key.replace(/'/g, "\\'")}', this.checked)">
-        <label for="rs-${key}" style="margin:0">${rs.name} <span style="color:var(--muted);font-size:10px">${rs.builtin ? '内置' : '自定义'}</span></label>
-      </div>`;
-    }).join('');
-    // 记录勾选
-    document.querySelectorAll('#ruleset-checkboxes input[type=checkbox]').forEach(cb => {
-      if (cb.checked) selectedRulesets.add(cb.nextElementSibling.textContent.trim().split(' ')[0]);
-    });
-    document.getElementById('btn-step2-next').disabled = false;
-  } catch (e) {
-    el.innerHTML = `<div class="empty">加载失败: ${e.message}</div>`;
-  }
+    const data = await api('/api/strategies');
+    el.innerHTML = data.strategies.map(s => `
+      <div class="strategy-card ${s.key===selectedStrategy || s.id===selectedStrategy?'active':''}" onclick="selectStrategy('${s.key||s.id}')">
+        <div class="s-name">${s.name} ${s.builtin?'<span style="color:var(--muted);font-size:10px">内置</span>':''} ${s.key===selectedStrategy||s.id===selectedStrategy?'<span style="color:var(--success)">✓</span>':''}</div>
+        <div class="s-desc">${s.description||''}</div>
+        <div class="s-groups">${s.groups.length} 个策略组</div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML=`<div class="empty">加载失败: ${e.message}</div>`; }
+}
+function selectStrategy(key) {
+  selectedStrategy = key;
+  renderStrategyList();
+  toast('已选择方案');
+}
+function importStrategyJson() {
+  const json = prompt('粘贴策略组方案 JSON：\n[{"name":"组名","type":"select","members":["DIRECT"]}]');
+  if (!json) return;
+  saveStrategy(json);
+}
+async function saveStrategy(json) {
+  try {
+    const groups = JSON.parse(json);
+    const name = prompt('方案名称：', '自定义方案');
+    if (!name) return;
+    await api('/api/strategies', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, groups}) });
+    toast('方案已保存'); renderStrategyList();
+  } catch(e) { toast('解析失败: ' + e.message); }
+}
+function importStrategy(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => saveStrategy(e.target.result);
+  reader.readAsText(file);
 }
 
-function toggleRuleset(name, checked) {
-  if (checked) selectedRulesets.add(name);
-  else selectedRulesets.delete(name);
+// ============ 导入的策略组（勾选）============
+function renderGroups() {
+  const list = document.getElementById('groups-list');
+  const count = document.getElementById('groups-toggle');
+  if (!allGroups.length) { list.innerHTML='<div class="empty">导入订阅后显示该订阅的策略组（可勾选启用）</div>'; return; }
+  list.innerHTML = allGroups.map((g,idx)=>{
+    const checked = selectedGroups.size===0 || selectedGroups.has(g.name) ? 'checked' : '';
+    const enabled = selectedGroups.size===0 || selectedGroups.has(g.name);
+    return `<div class="group-item ${groupsExpanded?'open':''} ${enabled?'':'disabled-group'}" id="g-item-${idx}">
+      <div class="group-head" onclick="toggleGroup(${idx})">
+        <span class="g-name"><input type="checkbox" class="g-check" ${checked} onclick="event.stopPropagation();toggleGroupCheck('${g.name.replace(/'/g,"\\'")}',this.checked)"> ${g.name}</span>
+        <span style="display:flex;align-items:center;gap:8px"><span class="g-type">${g.type} · ${g.members.length}</span><span class="g-arrow">▶</span></span>
+      </div>
+      <div class="group-members"><div class="group-members-inner">${g.members.map(m=>`<span class="member-tag">${m}</span>`).join('')}</div></div>
+    </div>`;
+  }).join('');
+}
+function toggleGroup(idx) { document.getElementById('g-item-'+idx).classList.toggle('open'); }
+function toggleGroupCheck(name, checked) {
+  if (checked) selectedGroups.add(name); else selectedGroups.delete(name);
+  renderGroups();
+}
+function toggleAllGroups() {
+  groupsExpanded = !groupsExpanded;
+  document.getElementById('groups-toggle').textContent = groupsExpanded ? '全部收起' : '全部展开';
+  renderGroups();
 }
 
-// ============ 步骤 3：导出 ============
+// ============ 客户端选择 ============
 let selectedClient = 'clash';
-function selectClient(target) {
-  selectedClient = target;
-  document.getElementById('export-target').value = target;
-  document.querySelectorAll('.client-option').forEach(o => {
-    o.classList.toggle('active', o.dataset.target === target);
-  });
+function renderClientPicker() {
+  document.querySelectorAll('.client-option').forEach(o => o.classList.toggle('active', o.dataset.target===selectedClient));
 }
+function selectClient(target) { selectedClient = target; renderClientPicker(); }
 
-function buildConvertReq() {
-  const include = document.getElementById('opt-include').value.split(',').map(s => s.trim()).filter(Boolean);
-  const exclude = document.getElementById('opt-exclude').value.split(',').map(s => s.trim()).filter(Boolean);
-  return {
-    source: allNodes.map(n => `${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n') || '',
-    source_type: 'surge',
-    target: selectedClient || 'clash',
-    transforms: {
-      merge_single: document.getElementById('opt-merge').checked,
-      protocol_tag: document.getElementById('opt-tag').checked,
-      auto_select: document.getElementById('opt-auto').checked,
-      include,
-      exclude,
-    }
-  };
-}
-
+// ============ 导出 ============
 async function generateConfig() {
   if (!allNodes.length) { toast('请先导入订阅'); return; }
-  currentTarget = selectedClient || document.getElementById('export-target').value || 'clash';
+  currentTarget = selectedClient || 'clash';
   toast('生成配置中...');
   try {
-    // 用节点直接生成（避免重复拉取）
-    const req = buildConvertReq();
-    currentConfig = await api('/api/convert', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req)
-    });
-    document.getElementById('export-result').style.display = 'block';
-    document.getElementById('config-preview').textContent = currentConfig;
-    document.getElementById('qr-box').style.display = 'none';
-    toast(`生成完成 (${currentTarget})`);
-  } catch (e) {
-    toast('生成失败: ' + e.message);
-  }
-}
-
-async function previewNodes() {
-  if (!allNodes.length) { toast('请先导入订阅'); return; }
-  const el = document.getElementById('node-preview');
-  renderNodePreview();
-  document.getElementById('step-1').scrollIntoView({ behavior: 'smooth' });
-}
-
-async function runLatency() {
-  if (!allNodes.length) { toast('请先导入订阅'); return; }
-  toast('测速中（并发测试节点端口）...');
-  try {
     const req = {
-      source: allNodes.map(n => `${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n'),
-      source_type: 'surge', target: 'clash',
-      transforms: { merge_single: true, protocol_tag: false }
+      source: allNodes.map(n=>`${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n'),
+      source_type: 'surge', target: currentTarget,
+      transforms: {
+        merge_single: document.getElementById('opt-merge').checked,
+        protocol_tag: document.getElementById('opt-tag').checked,
+        auto_select: document.getElementById('opt-auto').checked,
+        include: document.getElementById('opt-include').value.split(',').map(s=>s.trim()).filter(Boolean),
+        exclude: document.getElementById('opt-exclude').value.split(',').map(s=>s.trim()).filter(Boolean),
+      }
     };
-    const data = await api('/api/latency', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req)
-    });
-    const s = data.summary;
-    document.getElementById('latency-summary').textContent = `可达 ${s.ok}/${s.total} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
-    const maxMs = Math.max(...data.results.filter(r => r.latency >= 0).map(r => r.latency), 300);
-    document.getElementById('latency-results').innerHTML = data.results.slice(0, 15).map(r => {
-      if (r.latency < 0) return `<div class="latency-row"><span style="flex:1;font-size:11px">${r.name}</span><span style="color:var(--error);font-size:11px">超时</span></div>`;
-      const pct = Math.min(100, Math.round(r.latency / maxMs * 100));
-      const color = r.latency < 150 ? 'var(--success)' : r.latency < 300 ? 'var(--warning)' : 'var(--error)';
-      return `<div class="latency-row"><span style="flex:1;font-size:11px">${r.name}</span>
-        <div class="latency-bar"><div class="latency-fill" style="width:${pct}%;background:${color}"></div></div>
-        <span class="latency-ms" style="color:${color}">${r.latency}ms</span></div>`;
-    }).join('');
-  } catch (e) {
-    toast('测速失败: ' + e.message);
-  }
+    currentConfig = await api('/api/convert', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(req) });
+    document.getElementById('export-result').style.display='block';
+    document.getElementById('no-result').style.display='none';
+    document.getElementById('config-preview').textContent = currentConfig;
+    document.getElementById('qr-box').style.display='none';
+    toast(`生成完成 (${currentTarget})`);
+  } catch(e) { toast('生成失败: ' + e.message); }
 }
-
-async function copyResult() {
-  await navigator.clipboard.writeText(currentConfig);
-  toast('已复制');
-}
+async function copyResult() { await navigator.clipboard.writeText(currentConfig); toast('已复制'); }
 function downloadResult() {
-  const ext = currentTarget === 'singbox' ? 'json' : (currentTarget === 'quanx' ? 'conf' : 'yaml');
-  const blob = new Blob([currentConfig], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `subforge-${currentTarget}.${ext}`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('已下载');
+  const ext = currentTarget==='singbox'?'json':(currentTarget==='quanx'?'conf':'yaml');
+  const blob = new Blob([currentConfig], {type:'text/plain'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`subforge-${currentTarget}.${ext}`; a.click(); URL.revokeObjectURL(a.href); toast('已下载');
 }
 
-async function genConfigQr() {
-  if (!currentConfig) { toast('先生成配置'); return; }
-  const uri = `data:text/plain;base64,${btoa(unescape(encodeURIComponent(currentConfig.slice(0, 500))))}`;
-  // 用节点二维码接口（配置太长不适合二维码，提示）
-  toast('配置较长，建议使用订阅二维码');
-  // 生成订阅链接二维码
-  document.getElementById('qr-img').src = `${API}/api/qr/subscribe?profile=default`;
-  document.getElementById('qr-content').textContent = '（配置二维码太长，建议用订阅链接）';
-  document.getElementById('qr-box').style.display = 'block';
-}
-
-async function testCurrent() {
+// 订阅二维码（解决配置过长）
+async function genSubQr() {
   if (!allNodes.length) { toast('请先导入订阅'); return; }
-  toast('测试节点连通性...');
-  await runLatency();
-}
-
-// 保存为 Profile
-async function saveProfile() {
-  if (!allNodes.length) { toast('请先导入订阅'); return; }
-  const urls = document.getElementById('sub-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
-  if (!urls.length) { toast('没有可保存的订阅'); return; }
-  const name = prompt('配置档案名称：', 'my-profile');
-  if (!name) return;
+  // 保存为 profile 再生成订阅链接二维码
+  const urls = document.getElementById('sub-urls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!urls.length) { toast('需要订阅 URL 才能生成订阅二维码'); return; }
+  profileName = profileName || prompt('配置档案名称：', 'my-profile');
+  if (!profileName) return;
   const profile = {
-    name,
-    target: selectedClient || 'clash',
-    subscriptions: urls.map(u => {
-      let prefix = null, url = u;
-      if (u.includes('|')) { [prefix, url] = u.split('|'); prefix = prefix.trim() || null; url = url.trim(); }
-      return { url, ua: 'ClashForWindows/0.20.39', prefix };
-    }),
+    name: profileName, target: currentTarget,
+    subscriptions: urls.map(u=>{let prefix=null,url=u;if(u.includes('|')){[prefix,url]=u.split('|');prefix=(prefix||'').trim()||null;}return{url,ua:'ClashForWindows/0.20.39',prefix};}),
     transforms: {
-      include: document.getElementById('opt-include').value.split(',').map(s => s.trim()).filter(Boolean),
-      exclude: document.getElementById('opt-exclude').value.split(',').map(s => s.trim()).filter(Boolean),
+      include: document.getElementById('opt-include').value.split(',').map(s=>s.trim()).filter(Boolean),
+      exclude: document.getElementById('opt-exclude').value.split(',').map(s=>s.trim()).filter(Boolean),
       merge_single: document.getElementById('opt-merge').checked,
       protocol_tag: document.getElementById('opt-tag').checked,
       auto_select: document.getElementById('opt-auto').checked,
-    },
-    rules: { mode: 'myrulesets' }
+    }, rules: {mode:'myrulesets'}
   };
   try {
-    const created = await api('/api/profiles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
-    profileId = created.id;
-    toast(`已保存档案「${name}」`);
-  } catch (e) { toast('保存失败: ' + e.message); }
+    await api('/api/profiles', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(profile) });
+    const subUrl = `${location.origin}/api/subscribe?profile=${profileName}`;
+    const enc = encodeURIComponent(subUrl);
+    document.getElementById('qr-img').src = `${API}/api/qr/subscribe?profile=${profileName}`;
+    document.getElementById('qr-content').textContent = '手机扫码后客户端从 subforge 拉取订阅: ' + subUrl;
+    document.getElementById('qr-box').style.display='block';
+    toast('订阅二维码已生成');
+  } catch(e) { toast('保存档案失败: ' + e.message); }
+}
+
+// 测速
+async function runLatency() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  toast('测速中...');
+  try {
+    const req = { source: allNodes.map(n=>`${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n'), source_type:'surge', target:'clash', transforms:{ merge_single:true, protocol_tag:false } };
+    const data = await api('/api/latency', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(req) });
+    const s = data.summary;
+    document.getElementById('latency-summary').textContent = `可达 ${s.ok}/${s.total} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
+    const maxMs = Math.max(...data.results.filter(r=>r.latency>=0).map(r=>r.latency), 300);
+    document.getElementById('latency-results').innerHTML = data.results.slice(0,15).map(r=>{
+      if (r.latency<0) return `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:11px"><span>${r.name}</span><span style="color:var(--error)">超时</span></div>`;
+      const pct = Math.min(100, Math.round(r.latency/maxMs*100));
+      const color = r.latency<150?'var(--success)':r.latency<300?'var(--warning)':'var(--error)';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:11px"><span>${r.name}</span><span style="display:flex;align-items:center;gap:6px"><span style="width:80px;height:5px;background:var(--surface2);border-radius:3px"><span style="display:block;width:${pct}%;height:100%;background:${color};border-radius:3px"></span></span><span style="color:${color};min-width:45px">${r.latency}ms</span></span></div>`;
+    }).join('');
+  } catch(e) { toast('测速失败: ' + e.message); }
+}
+
+// 保存档案
+async function saveProfile() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  const urls = document.getElementById('sub-urls').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!urls.length) { toast('没有可保存的订阅'); return; }
+  const name = prompt('配置档案名称：', 'my-profile'); if (!name) return;
+  const profile = {
+    name, target: currentTarget,
+    subscriptions: urls.map(u=>{let prefix=null,url=u;if(u.includes('|')){[prefix,url]=u.split('|');prefix=(prefix||'').trim()||null;}return{url,ua:'ClashForWindows/0.20.39',prefix};}),
+    transforms: {
+      include: document.getElementById('opt-include').value.split(',').map(s=>s.trim()).filter(Boolean),
+      exclude: document.getElementById('opt-exclude').value.split(',').map(s=>s.trim()).filter(Boolean),
+      merge_single: document.getElementById('opt-merge').checked,
+      protocol_tag: document.getElementById('opt-tag').checked,
+      auto_select: document.getElementById('opt-auto').checked,
+    }, rules: {mode:'myrulesets'}
+  };
+  try { await api('/api/profiles', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(profile) }); toast(`已保存档案「${name}」`); }
+  catch(e) { toast('保存失败: ' + e.message); }
 }
 
 // ============ 节点详情 ============
@@ -861,45 +690,21 @@ function showNodeDetail(node) {
       <span style="color:var(--muted)">协议</span><span>${node.protocol}</span>
       <span style="color:var(--muted)">服务器</span><span>${node.server}</span>
       <span style="color:var(--muted)">端口</span><span>${node.port}</span>
-      <span style="color:var(--muted)">国家</span><span>${node.country || '🌍 其他地区'}</span>
+      <span style="color:var(--muted)">国家</span><span>${node.country||'🌍 其他地区'}</span>
     </div>`;
-  document.getElementById('node-modal').style.display = 'flex';
+  document.getElementById('node-modal').style.display='flex';
 }
-function closeNodeDetail() { document.getElementById('node-modal').style.display = 'none'; }
+function closeNodeDetail() { document.getElementById('node-modal').style.display='none'; }
 function copyNodeUri() {
   if (!_currentNode) return;
   const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
-  navigator.clipboard.writeText(uri);
-  toast('节点 URI 已复制');
-}
-function genNodeQrFromDetail() {
-  if (!_currentNode) return;
-  const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
-  const enc = encodeURIComponent(uri);
-  document.getElementById('qr-img').src = `${API}/api/qr/node?uri=${enc}`;
-  document.getElementById('qr-content').textContent = '节点: ' + uri;
-  document.getElementById('qr-box').style.display = 'block';
-  closeNodeDetail();
-  toast('二维码已生成');
-}
-
-// ============ 历史 ============
-async function clearHistory() {
-  if (!confirm('确认清空转换历史？')) return;
-  try { await api('/api/history', { method: 'DELETE' }); toast('已清空'); } catch (e) { toast('失败: ' + e.message); }
+  navigator.clipboard.writeText(uri); toast('节点 URI 已复制');
 }
 
 // ============ 初始化 ============
 (async function init() {
-  try {
-    await api('/api/health');
-    document.getElementById('header-health').innerHTML = '<span class="dot"></span>服务正常';
-  } catch (e) {
-    document.getElementById('header-health').className = 'status err';
-    document.getElementById('header-health').innerHTML = '<span class="dot"></span>服务异常';
-  }
-  // 默认选中 clash
-  selectClient('clash');
+  try { await api('/api/health'); document.getElementById('header-health').innerHTML='<span class="dot"></span>正常'; }
+  catch(e) { document.getElementById('header-health').className='status err'; document.getElementById('header-health').innerHTML='<span class="dot"></span>异常'; }
 })();
 </script>
 </body>
