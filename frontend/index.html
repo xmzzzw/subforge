@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>subforge — 订阅锻造厂</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚒️</text></svg>">
-
 <style>
 :root {
   --bg: #0f1117;
@@ -29,356 +28,314 @@ body {
 /* 顶部导航 */
 header {
   background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+  padding: 14px 24px; display: flex; align-items: center; gap: 16px;
   position: sticky; top: 0; z-index: 100;
 }
-header h1 { font-size: 20px; display: flex; align-items: center; gap: 10px; }
-header h1 .logo { font-size: 24px; }
-nav { display: flex; gap: 8px; margin-left: auto; }
-nav button {
-  background: none; border: none; color: var(--muted); font-size: 14px;
-  padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all .2s;
+header h1 { font-size: 19px; display: flex; align-items: center; gap: 10px; }
+header h1 .logo { font-size: 22px; }
+.header-status { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; }
+.status.ok { color: var(--success); }
+.status.ok .dot { background: var(--success); }
+.status.err { color: var(--error); }
+.status.err .dot { background: var(--error); }
+
+/* 三步流程容器 */
+.workflow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  align-items: start;
 }
-nav button:hover { color: var(--text); background: var(--surface2); }
-nav button.active { color: var(--primary); background: var(--surface2); }
-
-main { max-width: 1100px; margin: 0 auto; padding: 24px; }
-.tab { display: none; }
-.tab.active { display: block; }
-
-/* 卡片 */
-.card {
+.step {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+  border-radius: 12px; padding: 20px;
+  position: relative;
 }
-.card h2 { font-size: 16px; margin-bottom: 16px; }
-.card h3 { font-size: 14px; color: var(--muted); margin: 16px 0 8px; }
+.step-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+}
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.step-num.done { background: var(--success); }
+.step-num.inactive { background: var(--surface2); color: var(--muted); }
+.step-title { font-size: 16px; font-weight: 600; }
+.step-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.step.disabled { opacity: .55; }
+
+/* 步骤内容 */
+.step-body { min-height: 300px; }
+.section-label { font-size: 12px; color: var(--muted); margin: 12px 0 6px; font-weight: 500; }
 
 /* 表单 */
-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
 input, select, textarea {
   width: 100%; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--text); border-radius: 8px; padding: 10px 12px; font-size: 14px;
-  margin-bottom: 12px; font-family: inherit;
+  color: var(--text); border-radius: 8px; padding: 9px 11px; font-size: 13px;
+  margin-bottom: 10px; font-family: inherit;
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
-textarea { min-height: 120px; font-family: monospace; }
-.row { display: flex; gap: 12px; }
+textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
+.row { display: flex; gap: 10px; }
 .row > * { flex: 1; }
 
 /* 按钮 */
 .btn {
   background: var(--primary); color: #fff; border: none; border-radius: 8px;
-  padding: 10px 20px; font-size: 14px; cursor: pointer; transition: all .2s;
+  padding: 9px 18px; font-size: 13px; cursor: pointer; transition: all .2s;
+  font-weight: 500;
 }
 .btn:hover { background: var(--primary-hover); }
 .btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
 .btn.secondary:hover { border-color: var(--primary); }
 .btn.danger { background: transparent; color: var(--error); border: 1px solid var(--error); }
 .btn.danger:hover { background: var(--error); color: #fff; }
-.btn.sm { padding: 6px 12px; font-size: 12px; }
+.btn.sm { padding: 5px 10px; font-size: 12px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.next {
+  width: 100%; margin-top: 16px; padding: 11px;
+  background: var(--surface2); border: 1px solid var(--primary); color: var(--primary);
+  font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn.next:hover:not(:disabled) { background: var(--primary); color: #fff; }
+.btn.next:disabled { border-color: var(--border); color: var(--muted); }
 
-/* 列表 */
+/* 列表项 */
 .list-item {
   background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 6px;
   display: flex; justify-content: space-between; align-items: center;
 }
-.list-item .name { font-weight: 500; }
-.list-item .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
-.list-item .actions { display: flex; gap: 8px; }
+.list-item .name { font-weight: 500; font-size: 13px; }
+.list-item .meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.list-item .actions { display: flex; gap: 6px; }
 
-/* 状态 */
-.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
-.status .dot { width: 8px; height: 8px; border-radius: 50%; }
-.status.ok .dot { background: var(--success); }
-.status.ok { color: var(--success); }
-.status.err .dot { background: var(--error); }
-.status.err { color: var(--error); }
-
-/* 统计卡片 */
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; text-align: center;
-}
-.stat .value { font-size: 28px; font-weight: 700; margin: 8px 0; }
-.stat .label { color: var(--muted); font-size: 13px; }
-
-/* 预览 */
-pre {
-  background: #0d0f14; border: 1px solid var(--border); border-radius: 8px;
-  padding: 16px; overflow: auto; max-height: 500px; font-size: 12px;
-  font-family: "SF Mono", Consolas, monospace; line-height: 1.5;
-}
-.copy-btn { position: relative; float: right; }
+/* 空状态 */
+.empty { text-align: center; padding: 30px 10px; color: var(--muted); font-size: 13px; }
+.empty .icon { font-size: 32px; margin-bottom: 8px; }
 
 /* 节点标签 */
 .node-tag {
   display: inline-block; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 3px 8px; font-size: 11px; margin: 2px; color: var(--text);
+  border-radius: 5px; padding: 2px 7px; font-size: 11px; margin: 2px; color: var(--text);
+  cursor: pointer;
 }
+.node-tag:hover { border-color: var(--primary); }
+
+/* 节点预览 */
+.node-preview { max-height: 200px; overflow-y: auto; margin-top: 8px; }
+.node-preview::-webkit-scrollbar { width: 6px; }
+.node-preview::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.country-group { margin-bottom: 8px; }
+.country-group .country-name { color: var(--primary); font-size: 12px; font-weight: 600; }
+.country-group .country-count { color: var(--muted); font-size: 11px; }
+
+/* 导出结果 */
+.preview {
+  background: #0d0f14; border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; overflow: auto; max-height: 300px; font-size: 11px;
+  font-family: "SF Mono", Consolas, monospace; line-height: 1.5; margin-top: 10px;
+}
+.action-row { display: flex; gap: 8px; margin-top: 12px; }
+.action-row .btn { flex: 1; }
 
 /* 二维码 */
-#qr-img { display: block; margin: 0 auto; max-width: 300px; border: 4px solid #fff; border-radius: 8px; }
+#qr-img { display: block; margin: 8px auto; max-width: 160px; border: 3px solid #fff; border-radius: 8px; }
+.qr-section { text-align: center; margin-top: 10px; }
+
+/* 延迟条 */
+.latency-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.latency-bar { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; max-width: 120px; }
+.latency-fill { height: 100%; border-radius: 3px; }
+.latency-ms { min-width: 48px; text-align: right; font-size: 11px; }
+
+/* 规则集项 */
+.ruleset-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+.ruleset-item input[type=checkbox] { width: auto; margin: 0; }
 
 /* 提示 */
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-  padding: 12px 24px; border-radius: 8px; z-index: 1000; display: none;
-  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  background: var(--surface2); border: 1px solid var(--primary); color: var(--text);
+  padding: 11px 22px; border-radius: 8px; z-index: 1000; display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4); font-size: 13px;
 }
 .toast.show { display: block; animation: slideUp .3s; }
 @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; } }
 
-@media (max-width: 768px) {
-  .row { flex-direction: column; }
-  nav { gap: 4px; }
-  nav button { padding: 6px 10px; font-size: 13px; }
+/* 响应式 */
+@media (max-width: 1024px) {
+  .workflow { grid-template-columns: 1fr; }
+  .step-body { min-height: auto; }
 }
 </style>
 </head>
 <body>
 <header>
   <h1><span class="logo">⚒️</span> subforge</h1>
-  <nav>
-    <button data-tab="dashboard" class="active">仪表盘</button>
-    <button data-tab="profiles">配置档案</button>
-    <button data-tab="convert">转换测试</button>
-    <button data-tab="rulesets">规则集</button>
-    <button data-tab="qr">二维码</button>
-    <button data-tab="history">历史</button>
-    <button data-tab="api">API</button>
-  </nav>
+  <div class="header-status">
+    <span class="status ok" id="header-health"><span class="dot"></span>服务正常</span>
+    <button class="btn sm secondary" onclick="clearHistory()" title="清空历史">清空历史</button>
+  </div>
 </header>
 
-<main>
-  <!-- 仪表盘 -->
-  <div id="tab-dashboard" class="tab active">
-    <div class="stats">
-      <div class="stat"><div class="value" id="stat-profiles">-</div><div class="label">配置档案</div></div>
-      <div class="stat"><div class="value" id="stat-subscriptions">-</div><div class="label">订阅</div></div>
-      <div class="stat"><div class="value" id="stat-formats">-</div><div class="label">支持格式</div></div>
-      <div class="stat"><div class="value" id="stat-rulesets">-</div><div class="label">规则集</div></div>
-      <div class="stat"><div class="value"><span class="status ok" id="stat-health"><span class="dot"></span>正常</span></div><div class="label">服务状态</div></div>
+<main class="workflow">
+  <!-- ============ 步骤 1：订阅导入 ============ -->
+  <section class="step" id="step-1">
+    <div class="step-header">
+      <div class="step-num active" id="step1-num">1</div>
+      <div>
+        <div class="step-title">订阅导入</div>
+        <div class="step-sub">导入机场订阅，自动识别节点</div>
+      </div>
     </div>
-    <div class="card">
-      <h2>快速开始</h2>
-      <p style="color:var(--muted);font-size:14px;line-height:1.7">
-        1. <b>创建配置档案</b>：在「配置档案」页添加机场订阅 + 转换规则<br>
-        2. <b>获取订阅链接</b>：<code>/api/subscribe?profile=&lt;名称&gt;</code> 填入客户端<br>
-        3. <b>手机扫码</b>：在「二维码」页生成订阅/节点二维码，扫码导入<br>
-        4. <b>测试转换</b>：在「转换测试」页预览各种格式输出
-      </p>
-    </div>
-  </div>
+    <div class="step-body">
+      <div class="section-label">订阅 URL（可多个，每行一个）</div>
+      <textarea id="sub-urls" placeholder="https://机场订阅链接&#10;[机场A]|https://机场2链接"></textarea>
+      <div class="row">
+        <button class="btn secondary sm" onclick="importSubscription()">导入订阅</button>
+        <button class="btn secondary sm" onclick="loadDemoSub()">示例</button>
+      </div>
 
-  <!-- 配置档案 -->
-  <div id="tab-profiles" class="tab">
-    <div class="card">
-      <h2>配置档案管理</h2>
-      <button class="btn sm" onclick="showProfileForm()">+ 新建档案</button>
-      <div id="profiles-list" style="margin-top:16px"></div>
+      <div class="section-label">已导入订阅</div>
+      <div id="sub-list"><div class="empty"><div class="icon">📡</div>还没有导入订阅<br>粘贴订阅链接后点「导入订阅」</div></div>
+
+      <div class="section-label">节点预览（<span id="node-count">0</span> 节点）</div>
+      <div class="node-preview" id="node-preview"><div class="empty">导入订阅后显示节点</div></div>
+
+      <button class="btn next" id="btn-step1-next" onclick="goStep2()" disabled>
+        继续：选择规则 <span>→</span>
+      </button>
     </div>
-    <div id="profile-form" class="card" style="display:none">
-      <h2 id="profile-form-title">新建档案</h2>
-      <input type="hidden" id="pf-id">
-      <label>档案名称</label>
-      <input id="pf-name" placeholder="如 flower-ss">
-      <label>目标格式</label>
-      <select id="pf-target">
-        <option value="clash">Clash / mihomo</option>
-        <option value="surge">Surge</option>
+  </section>
+
+  <!-- ============ 步骤 2：规则配置 ============ -->
+  <section class="step disabled" id="step-2">
+    <div class="step-header">
+      <div class="step-num inactive" id="step2-num">2</div>
+      <div>
+        <div class="step-title">规则配置</div>
+        <div class="step-sub">选择规则集 + 转换选项</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="section-label">规则集（勾选要启用的）</div>
+      <div id="ruleset-checkboxes" style="max-height:160px;overflow-y:auto">
+        <div class="empty">加载中...</div>
+      </div>
+
+      <div class="section-label">转换选项</div>
+      <div class="ruleset-item">
+        <input type="checkbox" id="opt-merge" checked>
+        <label style="margin:0">单节点国家合并到其他地区</label>
+      </div>
+      <div class="ruleset-item">
+        <input type="checkbox" id="opt-tag" checked>
+        <label style="margin:0">节点名加协议标注 [ss]/[trojan]</label>
+      </div>
+      <div class="ruleset-item">
+        <input type="checkbox" id="opt-auto" checked>
+        <label style="margin:0">国家分组带自动选择（url-test）</label>
+      </div>
+
+      <div class="section-label">节点筛选（可选）</div>
+      <div class="row">
+        <div><label>只保留</label><input id="opt-include" placeholder="香港,美国"></div>
+        <div><label>排除</label><input id="opt-exclude" placeholder="澳门,广告"></div>
+      </div>
+
+      <button class="btn next" id="btn-step2-next" onclick="goStep3()" disabled>
+        继续：选择客户端导出 <span>→</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ 步骤 3：导出 ============ -->
+  <section class="step disabled" id="step-3">
+    <div class="step-header">
+      <div class="step-num inactive" id="step3-num">3</div>
+      <div>
+        <div class="step-title">导出</div>
+        <div class="step-sub">选择客户端格式，生成配置</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="section-label">目标客户端</div>
+      <select id="export-target">
+        <option value="clash">Clash / mihomo（全平台）</option>
+        <option value="surge">Surge（Mac / iOS）</option>
+        <option value="loon">Loon（iOS）</option>
+        <option value="quanx">Quantumult X（iOS）</option>
+        <option value="shadowrocket">Shadowrocket（iOS）</option>
+        <option value="singbox">sing-box（全平台）</option>
       </select>
-      <h3>订阅</h3>
-      <label>订阅 URL（可多个，每行一个；用 | 分隔前缀，如 [机场A]|https://...）</label>
-      <textarea id="pf-urls" placeholder="[机场A]|https://机场1订阅链接&#10;[机场B]|https://机场2订阅链接"></textarea>
-      <h3>转换规则</h3>
-      <div class="row">
-        <div><label>只保留（逗号分隔）</label><input id="pf-include" placeholder="香港,美国"></div>
-        <div><label>排除（逗号分隔）</label><input id="pf-exclude" placeholder="澳门,广告"></div>
-      </div>
-      <div class="row">
-        <div><label><input type="checkbox" id="pf-merge-single" checked> 单节点国家合并</label></div>
-        <div><label><input type="checkbox" id="pf-protocol-tag" checked> 协议标注 [ss]</label></div>
-      </div>
-      <div style="margin-top:16px;display:flex;gap:12px">
-        <button class="btn" onclick="saveProfile()">保存</button>
-        <button class="btn secondary" onclick="closeProfileForm()">取消</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- 转换测试 -->
-  <div id="tab-convert" class="tab">
-    <div class="card">
-      <h2>订阅转换测试</h2>
-      <label>输入（订阅 URL 或配置内容）</label>
-      <textarea id="conv-source" placeholder="粘贴订阅 URL 或 Surge/Clash 配置内容"></textarea>
-      <div class="row">
-        <div><label>来源类型</label>
-          <select id="conv-source-type">
-            <option value="auto">自动检测</option>
-            <option value="url">URL</option>
-            <option value="surge">Surge</option>
-            <option value="clash">Clash</option>
-            <option value="base64">Base64</option>
-            <option value="uri">URI</option>
-          </select>
-        </div>
-        <div><label>目标格式</label>
-          <select id="conv-target">
-            <option value="clash">Clash / mihomo</option>
-            <option value="surge">Surge</option>
-            <option value="loon">Loon</option>
-            <option value="quanx">Quantumult X</option>
-            <option value="shadowrocket">Shadowrocket</option>
-            <option value="singbox">sing-box</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:center">
-        <button class="btn" onclick="runConvert()">转换</button>
+      <div class="action-row">
+        <button class="btn" onclick="generateConfig()">生成配置</button>
         <button class="btn secondary" onclick="previewNodes()">节点预览</button>
-        <button class="btn secondary" onclick="runLatency()">延迟测试</button>
-        <label style="margin:0;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" id="conv-merge" checked style="width:auto;margin:0"> 单节点合并
-        </label>
-        <label style="margin:0;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" id="conv-tag" checked style="width:auto;margin:0"> 协议标注
-        </label>
+        <button class="btn secondary" onclick="runLatency()">测速</button>
       </div>
-      <div id="node-preview" style="margin-top:16px;display:none">
-        <h3>节点预览 <button class="btn sm secondary" onclick="runLatency()" style="margin-left:8px">测试延迟</button></h3>
-        <div id="node-stats" style="color:var(--muted);font-size:13px;margin-bottom:8px"></div>
-        <div id="node-list"></div>
-      </div>
-      <div id="latency-result" style="margin-top:16px;display:none">
-        <h3>延迟测试结果</h3>
-        <div id="latency-summary" style="color:var(--muted);font-size:13px;margin-bottom:8px"></div>
-        <div id="latency-list"></div>
-      </div>
-      <div id="conv-result" style="margin-top:16px;display:none">
-        <button class="btn secondary sm copy-btn" onclick="copyResult()">复制</button>
-        <button class="btn secondary sm" onclick="downloadResult()" style="float:right;margin-right:60px">下载</button>
-        <h3>转换结果</h3>
-        <pre id="conv-output"></pre>
-      </div>
-    </div>
-  </div>
 
-  <!-- 规则集 -->
-  <div id="tab-rulesets" class="tab">
-    <div class="card">
-      <h2>规则集管理</h2>
-      <button class="btn sm" onclick="showRulesetForm()">+ 添加自定义规则集</button>
-      <div id="rulesets-form" style="display:none;margin-top:16px">
-        <label>名称</label>
-        <input id="rs-name" placeholder="自定义规则集名">
-        <label>Surge 规则集 URL</label>
-        <input id="rs-surge" placeholder="https://...list">
-        <label>Clash 规则集 URL</label>
-        <input id="rs-clash" placeholder="https://...list">
-        <label>说明</label>
-        <input id="rs-desc" placeholder="用途说明">
-        <div style="margin-top:12px;display:flex;gap:12px">
-          <button class="btn" onclick="saveRuleset()">保存</button>
-          <button class="btn secondary" onclick="closeRulesetForm()">取消</button>
+      <div id="latency-summary" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      <div id="latency-results" style="margin-top:4px"></div>
+
+      <div id="export-result" style="display:none">
+        <div class="section-label">生成的配置</div>
+        <pre class="preview" id="config-preview"></pre>
+        <div class="action-row">
+          <button class="btn secondary" onclick="copyResult()">复制</button>
+          <button class="btn secondary" onclick="downloadResult()">下载</button>
+          <button class="btn secondary" onclick="genConfigQr()">二维码</button>
+        </div>
+        <div class="qr-section" id="qr-box" style="display:none">
+          <img id="qr-img" alt="二维码">
+          <div style="font-size:11px;color:var(--muted)" id="qr-content"></div>
         </div>
       </div>
-      <div id="rulesets-list" style="margin-top:16px"></div>
-    </div>
-    <div id="ruleset-edit" class="card" style="display:none">
-      <h2 id="rs-edit-title">编辑规则集</h2>
-      <input type="hidden" id="rs-edit-id">
-      <label>名称</label>
-      <input id="rs-edit-name">
-      <label>说明</label>
-      <input id="rs-edit-desc">
-      <label>规则内容（每行一条，如 DOMAIN-SUFFIX,example.com）</label>
-      <textarea id="rs-edit-content" style="min-height:200px;font-family:monospace"></textarea>
-      <div style="margin-top:12px;display:flex;gap:12px">
-        <button class="btn" onclick="saveRulesetEdit()">保存</button>
-        <button class="btn secondary" onclick="closeRulesetEdit()">取消</button>
+
+      <div class="action-row" style="margin-top:20px">
+        <button class="btn secondary" onclick="saveProfile()">保存为配置档案</button>
+        <button class="btn secondary" onclick="testCurrent()">测试订阅</button>
       </div>
     </div>
-  </div>
-
-  <!-- 二维码 -->
-  <div id="tab-qr" class="tab">
-    <div class="card">
-      <h2>节点二维码</h2>
-      <label>节点 URI（ss:// trojan:// anytls:// ...）</label>
-      <input id="qr-node-uri" placeholder="ss://YWVzLTI1Ni1nY206cGFzcw==@1.2.3.4:8388#节点名">
-      <button class="btn" onclick="genNodeQr()">生成节点二维码</button>
-    </div>
-    <div class="card">
-      <h2>订阅二维码</h2>
-      <label>选择配置档案</label>
-      <select id="qr-profile"></select>
-      <button class="btn" onclick="genSubQr()">生成订阅二维码</button>
-    </div>
-    <div class="card" id="qr-result" style="display:none;text-align:center">
-      <h3>二维码</h3>
-      <img id="qr-img" alt="二维码">
-      <p style="color:var(--muted);font-size:12px;margin-top:8px" id="qr-content"></p>
-    </div>
-  </div>
-
-  <!-- 历史 -->
-  <div id="tab-history" class="tab">
-    <div class="card">
-      <h2>转换历史 <button class="btn sm danger" onclick="clearHistory()" style="float:right">清空</button></h2>
-      <div id="history-list"></div>
-    </div>
-  </div>
-
-  <!-- API 文档 -->
-  <div id="tab-api" class="tab">
-    <div class="card">
-      <h2>API 参考</h2>
-      <pre style="max-height:none"># 健康检查
-GET /api/health
-
-# 订阅转换（最常用）
-GET /api/subscribe?profile=&lt;名称&gt;
-GET /api/subscribe?url=&lt;订阅&gt;&target=clash&include=香港
-
-# 转换配置
-POST /api/convert
-
-# 配置档案
-GET/POST   /api/profiles
-GET/PUT    /api/profiles/&lt;id&gt;
-DELETE     /api/profiles/&lt;id&gt;
-
-# 二维码
-GET /api/qr/node?uri=ss://...          → 节点 PNG
-GET /api/qr/subscribe?profile=flower   → 订阅 PNG</pre>
-    </div>
-  </div>
+  </section>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <!-- 节点详情弹窗 -->
-<div id="node-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeNodeDetail()">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow:auto">
+<div id="node-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center" onclick="if(event.target===this)closeNodeDetail()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:420px;width:90%;max-height:80vh;overflow:auto">
     <h3 id="nd-title" style="margin-bottom:16px"></h3>
     <div id="nd-body" style="font-size:13px;line-height:1.8"></div>
     <div style="margin-top:16px;display:flex;gap:12px">
       <button class="btn sm" onclick="copyNodeUri()">复制 URI</button>
-      <button class="btn sm secondary" onclick="genNodeQrFromDetail()">生成二维码</button>
+      <button class="btn sm secondary" onclick="genNodeQrFromDetail()">二维码</button>
       <button class="btn sm secondary" onclick="closeNodeDetail()">关闭</button>
     </div>
   </div>
 </div>
 
 <script>
-// ============ 基础 ============
+// ============ 全局状态 ============
 const API = '';
+let allNodes = [];       // 步骤1 导入的节点
+let currentNodeList = []; // 转换后的节点
+let currentConfig = '';  // 生成的配置
+let currentTarget = 'clash';
+let selectedRulesets = new Set(); // 勾选的规则集
+let profileId = null;   // 保存档案后的 id
+
+// ============ 基础 ============
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -394,242 +351,296 @@ async function api(path, opts = {}) {
   return ct.includes('json') ? res.json() : res.text();
 }
 
-// ============ 导航 ============
-document.querySelectorAll('nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
-
-// ============ 仪表盘 ============
-async function loadDashboard() {
-  try {
-    const profiles = await api('/api/profiles');
-    document.getElementById('stat-profiles').textContent = profiles.length;
-    let subs = 0;
-    profiles.forEach(p => subs += (p.subscriptions || []).length);
-    document.getElementById('stat-subscriptions').textContent = subs;
-    // 格式数
-    try {
-      const fmts = await api('/api/formats');
-      document.getElementById('stat-formats').textContent = fmts.formats.length;
-    } catch (e) { document.getElementById('stat-formats').textContent = '-'; }
-    // 规则集数
-    try {
-      const rs = await api('/api/rulesets');
-      document.getElementById('stat-rulesets').textContent = rs.rulesets.length;
-    } catch (e) { document.getElementById('stat-rulesets').textContent = '-'; }
-    await api('/api/health');
-    document.getElementById('stat-health').innerHTML = '<span class="dot"></span>正常';
-  } catch (e) {
-    document.getElementById('stat-health').innerHTML = '<span class="dot"></span>异常';
-  }
-}
-
-// ============ 配置档案 ============
-async function loadProfiles() {
-  const list = document.getElementById('profiles-list');
-  try {
-    const profiles = await api('/api/profiles');
-    if (!profiles.length) {
-      list.innerHTML = '<p style="color:var(--muted)">暂无配置档案，点击「新建档案」创建</p>';
-      return;
+// ============ 步骤切换 ============
+function setStep(n, active) {
+  const steps = [1, 2, 3];
+  steps.forEach(i => {
+    const el = document.getElementById('step-' + i);
+    const num = document.getElementById('step' + i + '-num');
+    if (i < n) {
+      el.classList.remove('disabled');
+      num.className = 'step-num done';
+      num.textContent = '✓';
+    } else if (i === n) {
+      el.classList.remove('disabled');
+      num.className = 'step-num active';
+      num.textContent = i;
+    } else {
+      el.classList.add('disabled');
+      num.className = 'step-num inactive';
+      num.textContent = i;
     }
-    list.innerHTML = profiles.map(p => {
-      const subs = p.subscriptions || [];
-      const subMeta = subs.map(s => {
-        const host = (s.url || '').replace(/^https?:\/\//,'').split('/')[0] || '?';
-        return `${s.prefix ? s.prefix + ' ' : ''}${host}`;
-      }).join(', ');
-      return `
-      <div class="list-item">
-        <div>
-          <div class="name">${p.name}</div>
-          <div class="meta">格式: ${p.target} | 订阅 ${subs.length} 个: ${subMeta || '无'} | ${(p.transforms||{}).merge_single ? '合并单节点' : '保留单节点'}</div>
-        </div>
-        <div class="actions">
-          <button class="btn sm secondary" onclick="editProfile('${p.id}')">编辑</button>
-          <button class="btn sm" onclick="getSubLink('${p.name}')">订阅链接</button>
-          <button class="btn sm secondary" onclick="testProfile('${p.name}')">测试</button>
-          <button class="btn sm danger" onclick="deleteProfile('${p.id}','${p.name}')">删除</button>
-        </div>
-      </div>`;
-    }).join('');
-    // 更新二维码下拉
-    const sel = document.getElementById('qr-profile');
-    sel.innerHTML = profiles.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
-  } catch (e) {
-    list.innerHTML = `<p style="color:var(--error)">加载失败: ${e.message}</p>`;
-  }
+  });
+}
+function goStep2() {
+  setStep(2);
+  loadRulesetCheckboxes();
+  document.getElementById('step-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function goStep3() {
+  setStep(3);
+  document.getElementById('step-3').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function showProfileForm(p) {
-  document.getElementById('profile-form').style.display = 'block';
-  document.getElementById('profile-form-title').textContent = p ? '编辑档案' : '新建档案';
-  if (p) {
-    document.getElementById('pf-id').value = p.id;
-    document.getElementById('pf-name').value = p.name;
-    document.getElementById('pf-target').value = p.target;
-    document.getElementById('pf-urls').value = (p.subscriptions||[]).map(s => s.prefix ? `${s.prefix}|${s.url}` : s.url).join('\n');
-    document.getElementById('pf-include').value = (p.transforms?.include||[]).join(',');
-    document.getElementById('pf-exclude').value = (p.transforms?.exclude||[]).join(',');
-    document.getElementById('pf-merge-single').checked = p.transforms?.merge_single !== false;
-    document.getElementById('pf-protocol-tag').checked = p.transforms?.protocol_tag !== false;
-  } else {
-    ['pf-id','pf-name','pf-urls','pf-include','pf-exclude'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('pf-target').value = 'clash';
-    document.getElementById('pf-merge-single').checked = true;
-    document.getElementById('pf-protocol-tag').checked = true;
-  }
-  window.scrollTo(0, document.getElementById('profile-form').offsetTop - 80);
-}
-function closeProfileForm() { document.getElementById('profile-form').style.display = 'none'; }
-async function editProfile(id) {
-  const p = await api('/api/profiles/' + id);
-  showProfileForm(p);
-}
-async function saveProfile() {
-  const id = document.getElementById('pf-id').value;
-  const rawLines = document.getElementById('pf-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
-  if (!rawLines.length) { toast('请填写至少一个订阅 URL'); return; }
-  // 解析 [前缀]|URL 格式
-  const subscriptions = rawLines.map(line => {
+// ============ 步骤 1：订阅导入 ============
+async function importSubscription() {
+  const rawLines = document.getElementById('sub-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!rawLines.length) { toast('请先粘贴订阅 URL'); return; }
+
+  toast('导入订阅中...');
+  // 解析 [前缀]|URL
+  const subs = rawLines.map(line => {
     let prefix = null, url = line;
     if (line.includes('|')) {
       const [p, u] = line.split('|');
-      prefix = p.trim() || null;
-      url = u.trim();
+      prefix = p.trim() || null; url = u.trim();
     }
-    return { url, ua: 'ClashForWindows/0.20.39', prefix };
+    return { url, prefix };
   });
-  const profile = {
-    name: document.getElementById('pf-name').value || 'unnamed',
-    target: document.getElementById('pf-target').value,
-    subscriptions,
-    transforms: {
-      include: document.getElementById('pf-include').value.split(',').map(s=>s.trim()).filter(Boolean),
-      exclude: document.getElementById('pf-exclude').value.split(',').map(s=>s.trim()).filter(Boolean),
-      merge_single: document.getElementById('pf-merge-single').checked,
-      protocol_tag: document.getElementById('pf-protocol-tag').checked,
-    },
-    rules: { mode: 'myrulesets' }
-  };
-  try {
-    if (id) {
-      await api('/api/profiles/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(profile) });
-      toast('档案已更新');
-    } else {
-      await api('/api/profiles', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(profile) });
-      toast('档案已创建');
+
+  // 逐个拉取并聚合
+  let allNodeList = [];
+  let errors = [];
+  for (const sub of subs) {
+    try {
+      const content = await api('/api/convert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: sub.url, source_type: 'url', target: 'clash',
+          transforms: { merge_single: true, protocol_tag: false }
+        })
+      });
+      // 通过 /api/nodes 拿节点列表
+      const nodeData = await api('/api/nodes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: sub.url, source_type: 'url', target: 'clash',
+          transforms: { merge_single: true, protocol_tag: false }
+        })
+      });
+      const nodes = nodeData.nodes.map(n => ({ ...n, prefix: sub.prefix }));
+      allNodeList = allNodeList.concat(nodes);
+    } catch (e) {
+      errors.push(`${sub.url.split('/')[2]||'?'}: ${e.message}`);
     }
-    closeProfileForm(); loadProfiles(); loadDashboard();
-  } catch (e) { toast('保存失败: ' + e.message); }
+  }
+
+  allNodes = allNodeList;
+  renderSubList(subs, errors);
+  renderNodePreview();
+  toast(`导入完成: ${allNodes.length} 个节点${errors.length ? `, ${errors.length} 个订阅失败` : ''}`);
+  updateStep1Next();
 }
-async function deleteProfile(id, name) {
-  if (!confirm(`确认删除档案「${name}」？`)) return;
-  await api('/api/profiles/' + id, { method: 'DELETE' });
-  toast('已删除'); loadProfiles(); loadDashboard();
+
+function renderSubList(subs, errors) {
+  const el = document.getElementById('sub-list');
+  if (!subs.length && !errors.length) { el.innerHTML = '<div class="empty">无订阅</div>'; return; }
+  el.innerHTML = subs.map(s => `
+    <div class="list-item">
+      <div>
+        <div class="name">${s.prefix ? s.prefix : '订阅'}</div>
+        <div class="meta">${s.url.split('/')[2] || s.url}</div>
+      </div>
+    </div>`).join('')
+    + (errors.length ? `<div style="color:var(--error);font-size:11px;margin-top:6px">失败: ${errors.join('; ')}</div>` : '');
 }
-async function getSubLink(name) {
-  const url = `${location.origin}/api/subscribe?profile=${name}`;
-  await navigator.clipboard.writeText(url).catch(()=>{});
-  toast('订阅链接已复制: ' + url);
+
+function renderNodePreview() {
+  const el = document.getElementById('node-preview');
+  document.getElementById('node-count').textContent = allNodes.length;
+  if (!allNodes.length) { el.innerHTML = '<div class="empty">导入订阅后显示节点</div>'; return; }
+
+  // 按国家分组
+  const byCountry = {};
+  allNodes.forEach(n => { (byCountry[n.country] = byCountry[n.country] || []).push(n); });
+  let html = '';
+  Object.entries(byCountry).sort((a, b) => b[1].length - a[1].length).forEach(([country, nodes]) => {
+    html += `<div class="country-group">
+      <span class="country-name">${country}</span> <span class="country-count">(${nodes.length})</span>
+      <div style="margin-top:3px">${nodes.map(n =>
+        `<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g, '&quot;')})">${n.name}</span>`
+      ).join(' ')}</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+  // 有节点就启用步骤2
+  document.getElementById('btn-step1-next').disabled = allNodes.length === 0;
 }
-async function testProfile(name) {
-  toast(`测试 ${name} 的订阅...`);
+
+function updateStep1Next() {
+  document.getElementById('btn-step1-next').disabled = allNodes.length === 0;
+}
+
+function loadDemoSub() {
+  document.getElementById('sub-urls').value = 'https://raw.githubusercontent.com/xmzzzw/my-rulesets/main/nexitallyy_Extra_AI.list';
+  toast('已填入示例（规则集，仅演示，非节点订阅）');
+}
+
+// ============ 步骤 2：规则配置 ============
+async function loadRulesetCheckboxes() {
+  const el = document.getElementById('ruleset-checkboxes');
   try {
-    const data = await api('/api/profile/test', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ profile: name }) });
-    let msg = `${name}: 可用 ${data.ok}/${data.total}`;
-    const failed = data.results.filter(r => !r.ok);
-    if (failed.length) {
-      msg += ` | 失败: ${failed.map(f => f.url.split('/')[2] || '?').join(', ')}`;
-    }
-    toast(msg);
+    const data = await api('/api/rulesets');
+    // 默认勾选核心规则集
+    const defaultSelected = ['nexitallyy Extra AI', 'nexitallyy Extra CN3', 'blackmatrix7 Google', 'blackmatrix7 YouTube'];
+    el.innerHTML = data.rulesets.map(rs => {
+      const key = rs.name;
+      const checked = selectedRulesets.size === 0 && defaultSelected.includes(key) ? 'checked' : (selectedRulesets.has(key) ? 'checked' : '');
+      return `<div class="ruleset-item">
+        <input type="checkbox" id="rs-${key}" ${checked} onchange="toggleRuleset('${key.replace(/'/g, "\\'")}', this.checked)">
+        <label for="rs-${key}" style="margin:0">${rs.name} <span style="color:var(--muted);font-size:10px">${rs.builtin ? '内置' : '自定义'}</span></label>
+      </div>`;
+    }).join('');
+    // 记录勾选
+    document.querySelectorAll('#ruleset-checkboxes input[type=checkbox]').forEach(cb => {
+      if (cb.checked) selectedRulesets.add(cb.nextElementSibling.textContent.trim().split(' ')[0]);
+    });
+    document.getElementById('btn-step2-next').disabled = false;
   } catch (e) {
-    toast('测试失败: ' + e.message);
+    el.innerHTML = `<div class="empty">加载失败: ${e.message}</div>`;
   }
 }
 
-// ============ 转换测试 ============
-async function runConvert() {
-  const source = document.getElementById('conv-source').value.trim();
-  if (!source) { toast('请输入订阅或配置内容'); return; }
-  const req = {
-    source,
-    source_type: document.getElementById('conv-source-type').value,
-    target: document.getElementById('conv-target').value,
+function toggleRuleset(name, checked) {
+  if (checked) selectedRulesets.add(name);
+  else selectedRulesets.delete(name);
+}
+
+// ============ 步骤 3：导出 ============
+function buildConvertReq() {
+  const include = document.getElementById('opt-include').value.split(',').map(s => s.trim()).filter(Boolean);
+  const exclude = document.getElementById('opt-exclude').value.split(',').map(s => s.trim()).filter(Boolean);
+  return {
+    source: allNodes.map(n => `${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n') || '',
+    source_type: 'surge',
+    target: document.getElementById('export-target').value,
     transforms: {
-      merge_single: document.getElementById('conv-merge').checked,
-      protocol_tag: document.getElementById('conv-tag').checked,
+      merge_single: document.getElementById('opt-merge').checked,
+      protocol_tag: document.getElementById('opt-tag').checked,
+      auto_select: document.getElementById('opt-auto').checked,
+      include,
+      exclude,
     }
   };
-  document.getElementById('conv-result').style.display = 'block';
-  document.getElementById('conv-output').textContent = '转换中...';
+}
+
+async function generateConfig() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  currentTarget = document.getElementById('export-target').value;
+  toast('生成配置中...');
   try {
-    const config = await api('/api/convert', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
-    document.getElementById('conv-output').textContent = config;
-    toast('转换成功');
+    // 用节点直接生成（避免重复拉取）
+    const req = buildConvertReq();
+    currentConfig = await api('/api/convert', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req)
+    });
+    document.getElementById('export-result').style.display = 'block';
+    document.getElementById('config-preview').textContent = currentConfig;
+    document.getElementById('qr-box').style.display = 'none';
+    toast(`生成完成 (${currentTarget})`);
   } catch (e) {
-    document.getElementById('conv-output').textContent = '错误: ' + e.message;
+    toast('生成失败: ' + e.message);
   }
 }
+
+async function previewNodes() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  const el = document.getElementById('node-preview');
+  renderNodePreview();
+  document.getElementById('step-1').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function runLatency() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  toast('测速中（并发测试节点端口）...');
+  try {
+    const req = {
+      source: allNodes.map(n => `${n.name} = ${n.protocol}, ${n.server}, ${n.port}, password=xxx`).join('\n'),
+      source_type: 'surge', target: 'clash',
+      transforms: { merge_single: true, protocol_tag: false }
+    };
+    const data = await api('/api/latency', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req)
+    });
+    const s = data.summary;
+    document.getElementById('latency-summary').textContent = `可达 ${s.ok}/${s.total} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
+    const maxMs = Math.max(...data.results.filter(r => r.latency >= 0).map(r => r.latency), 300);
+    document.getElementById('latency-results').innerHTML = data.results.slice(0, 15).map(r => {
+      if (r.latency < 0) return `<div class="latency-row"><span style="flex:1;font-size:11px">${r.name}</span><span style="color:var(--error);font-size:11px">超时</span></div>`;
+      const pct = Math.min(100, Math.round(r.latency / maxMs * 100));
+      const color = r.latency < 150 ? 'var(--success)' : r.latency < 300 ? 'var(--warning)' : 'var(--error)';
+      return `<div class="latency-row"><span style="flex:1;font-size:11px">${r.name}</span>
+        <div class="latency-bar"><div class="latency-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="latency-ms" style="color:${color}">${r.latency}ms</span></div>`;
+    }).join('');
+  } catch (e) {
+    toast('测速失败: ' + e.message);
+  }
+}
+
 async function copyResult() {
-  const text = document.getElementById('conv-output').textContent;
-  await navigator.clipboard.writeText(text);
+  await navigator.clipboard.writeText(currentConfig);
   toast('已复制');
 }
 function downloadResult() {
-  const text = document.getElementById('conv-output').textContent;
-  const target = document.getElementById('conv-target').value;
-  const ext = target === 'singbox' ? 'json' : (target === 'quanx' ? 'conf' : 'yaml');
-  const blob = new Blob([text], { type: 'text/plain' });
+  const ext = currentTarget === 'singbox' ? 'json' : (currentTarget === 'quanx' ? 'conf' : 'yaml');
+  const blob = new Blob([currentConfig], { type: 'text/plain' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `subforge-${target}.${ext}`;
+  a.download = `subforge-${currentTarget}.${ext}`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast('已下载');
 }
-async function previewNodes() {
-  const source = document.getElementById('conv-source').value.trim();
-  if (!source) { toast('请输入订阅或配置内容'); return; }
-  const req = {
-    source,
-    source_type: document.getElementById('conv-source-type').value,
-    target: document.getElementById('conv-target').value,
+
+async function genConfigQr() {
+  if (!currentConfig) { toast('先生成配置'); return; }
+  const uri = `data:text/plain;base64,${btoa(unescape(encodeURIComponent(currentConfig.slice(0, 500))))}`;
+  // 用节点二维码接口（配置太长不适合二维码，提示）
+  toast('配置较长，建议使用订阅二维码');
+  // 生成订阅链接二维码
+  document.getElementById('qr-img').src = `${API}/api/qr/subscribe?profile=default`;
+  document.getElementById('qr-content').textContent = '（配置二维码太长，建议用订阅链接）';
+  document.getElementById('qr-box').style.display = 'block';
+}
+
+async function testCurrent() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  toast('测试节点连通性...');
+  await runLatency();
+}
+
+// 保存为 Profile
+async function saveProfile() {
+  if (!allNodes.length) { toast('请先导入订阅'); return; }
+  const urls = document.getElementById('sub-urls').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (!urls.length) { toast('没有可保存的订阅'); return; }
+  const name = prompt('配置档案名称：', 'my-profile');
+  if (!name) return;
+  const profile = {
+    name,
+    target: document.getElementById('export-target').value,
+    subscriptions: urls.map(u => {
+      let prefix = null, url = u;
+      if (u.includes('|')) { [prefix, url] = u.split('|'); prefix = prefix.trim() || null; url = url.trim(); }
+      return { url, ua: 'ClashForWindows/0.20.39', prefix };
+    }),
     transforms: {
-      merge_single: document.getElementById('conv-merge').checked,
-      protocol_tag: document.getElementById('conv-tag').checked,
-    }
+      include: document.getElementById('opt-include').value.split(',').map(s => s.trim()).filter(Boolean),
+      exclude: document.getElementById('opt-exclude').value.split(',').map(s => s.trim()).filter(Boolean),
+      merge_single: document.getElementById('opt-merge').checked,
+      protocol_tag: document.getElementById('opt-tag').checked,
+      auto_select: document.getElementById('opt-auto').checked,
+    },
+    rules: { mode: 'myrulesets' }
   };
-  document.getElementById('node-preview').style.display = 'block';
-  document.getElementById('node-list').innerHTML = '加载中...';
   try {
-    const data = await api('/api/nodes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
-    // 协议统计
-    const protoCount = {};
-    data.nodes.forEach(n => { protoCount[n.protocol] = (protoCount[n.protocol]||0) + 1; });
-    const protoStr = Object.entries(protoCount).map(([p,c]) => `${p}:${c}`).join(' · ');
-    document.getElementById('node-stats').textContent = `共 ${data.count} 个节点 | ${protoStr}`;
-    // 按国家分组显示
-    const byCountry = {};
-    data.nodes.forEach(n => { (byCountry[n.country] = byCountry[n.country] || []).push(n); });
-    let html = '';
-    Object.entries(byCountry).sort((a,b) => b[1].length - a[1].length).forEach(([country, nodes]) => {
-      html += `<div style="margin-bottom:8px">
-        <b style="color:var(--primary)">${country}</b> <span style="color:var(--muted)">(${nodes.length})</span>
-        <div style="margin-top:4px">${nodes.map(n =>
-          `<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g, '&quot;')})" title="点击查看详情">${n.name} <span style="opacity:.6">⚙</span></span>`
-        ).join(' ')}</div>
-      </div>`;
-    });
-    document.getElementById('node-list').innerHTML = html;
-  } catch (e) {
-    document.getElementById('node-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
-  }
+    const created = await api('/api/profiles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
+    profileId = created.id;
+    toast(`已保存档案「${name}」`);
+  } catch (e) { toast('保存失败: ' + e.message); }
 }
 
 // ============ 节点详情 ============
@@ -646,9 +657,7 @@ function showNodeDetail(node) {
     </div>`;
   document.getElementById('node-modal').style.display = 'flex';
 }
-function closeNodeDetail() {
-  document.getElementById('node-modal').style.display = 'none';
-}
+function closeNodeDetail() { document.getElementById('node-modal').style.display = 'none'; }
 function copyNodeUri() {
   if (!_currentNode) return;
   const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
@@ -658,182 +667,30 @@ function copyNodeUri() {
 function genNodeQrFromDetail() {
   if (!_currentNode) return;
   const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
-  document.getElementById('qr-node-uri').value = uri;
-  document.querySelector('nav button[data-tab="qr"]').click();
-  genNodeQr();
-  closeNodeDetail();
-}
-
-// ============ 二维码 ============
-async function genNodeQr() {
-  const uri = document.getElementById('qr-node-uri').value.trim();
-  if (!uri) { toast('请输入节点 URI'); return; }
-  const encoded = encodeURIComponent(uri);
-  const url = `${API}/api/qr/node?uri=${encoded}`;
-  document.getElementById('qr-img').src = url;
+  const enc = encodeURIComponent(uri);
+  document.getElementById('qr-img').src = `${API}/api/qr/node?uri=${enc}`;
   document.getElementById('qr-content').textContent = '节点: ' + uri;
-  document.getElementById('qr-result').style.display = 'block';
-}
-async function genSubQr() {
-  const name = document.getElementById('qr-profile').value;
-  if (!name) { toast('请先创建配置档案'); return; }
-  const url = `${API}/api/qr/subscribe?profile=${name}`;
-  document.getElementById('qr-img').src = url;
-  document.getElementById('qr-content').textContent = '订阅: ' + `${location.origin}/api/subscribe?profile=${name}`;
-  document.getElementById('qr-result').style.display = 'block';
-}
-
-// ============ 延迟测试 ============
-async function runLatency() {
-  const source = document.getElementById('conv-source').value.trim();
-  if (!source) { toast('请输入订阅或配置内容'); return; }
-  const req = {
-    source,
-    source_type: document.getElementById('conv-source-type').value,
-    target: document.getElementById('conv-target').value,
-    transforms: {
-      merge_single: document.getElementById('conv-merge').checked,
-      protocol_tag: document.getElementById('conv-tag').checked,
-    }
-  };
-  document.getElementById('latency-result').style.display = 'block';
-  document.getElementById('latency-list').innerHTML = '测试中...';
-  try {
-    const data = await api('/api/latency', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
-    const s = data.summary;
-    document.getElementById('latency-summary').textContent =
-      `共 ${s.total} 节点 | 可达 ${s.ok} | 超时 ${s.timeout} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
-    // 可视化：延迟条
-    const maxMs = Math.max(...data.results.filter(r => r.status === 'ok').map(r => r.latency), 300);
-    document.getElementById('latency-list').innerHTML = data.results.map(r => {
-      if (r.status !== 'ok') {
-        return `<div class="list-item"><span class="name">${r.name}</span><span style="color:var(--error)">超时</span></div>`;
-      }
-      const pct = Math.min(100, Math.round(r.latency / maxMs * 100));
-      const color = r.latency < 150 ? 'var(--success)' : r.latency < 300 ? 'var(--warning)' : 'var(--error)';
-      return `<div class="list-item">
-        <span class="name">${r.name}</span>
-        <span style="display:flex;align-items:center;gap:8px;flex:1;max-width:300px">
-          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px">
-            <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
-          </div>
-          <span style="color:${color};min-width:50px;text-align:right">${r.latency}ms</span>
-        </span>
-      </div>`;
-    }).join('');
-  } catch (e) {
-    document.getElementById('latency-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
-  }
-}
-
-// ============ 规则集 ============
-async function loadRulesets() {
-  const list = document.getElementById('rulesets-list');
-  try {
-    const data = await api('/api/rulesets');
-    list.innerHTML = data.rulesets.map(rs => `
-      <div class="list-item">
-        <div>
-          <div class="name">${rs.name} ${rs.builtin ? '<span style="color:var(--muted);font-size:11px">内置</span>' : ''}</div>
-          <div class="meta">${rs.description || '自定义规则集'}${rs.builtin ? ' | clash: ' + (rs.clash_url||'').split('/').pop() : ''}</div>
-        </div>
-        <div class="actions">
-          ${rs.builtin ? '' : `
-            <button class="btn sm secondary" onclick="editRuleset('${rs.id}')">编辑</button>
-            <button class="btn sm danger" onclick="deleteRuleset('${rs.id}')">删除</button>`}
-        </div>
-      </div>`).join('');
-  } catch (e) {
-    list.innerHTML = `<p style="color:var(--error)">加载失败: ${e.message}</p>`;
-  }
-}
-function showRulesetForm() { document.getElementById('rulesets-form').style.display = 'block'; }
-function closeRulesetForm() {
-  document.getElementById('rulesets-form').style.display = 'none';
-  ['rs-name','rs-surge','rs-clash','rs-desc'].forEach(id => document.getElementById(id).value = '');
-}
-async function saveRuleset() {
-  const data = {
-    name: document.getElementById('rs-name').value,
-    surge_url: document.getElementById('rs-surge').value,
-    clash_url: document.getElementById('rs-clash').value,
-    description: document.getElementById('rs-desc').value,
-  };
-  if (!data.name || !(data.surge_url || data.clash_url)) { toast('请填写名称和至少一个 URL'); return; }
-  try {
-    await api('/api/rulesets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    toast('规则集已添加'); closeRulesetForm(); loadRulesets();
-  } catch (e) { toast('添加失败: ' + e.message); }
-}
-async function deleteRuleset(id) {
-  if (!confirm('确认删除该自定义规则集？')) return;
-  await api('/api/rulesets/' + id, { method: 'DELETE' });
-  toast('已删除'); loadRulesets();
-}
-async function editRuleset(id) {
-  try {
-    const rs = await api('/api/rulesets/' + id);
-    document.getElementById('rs-edit-id').value = id;
-    document.getElementById('rs-edit-name').value = rs.name;
-    document.getElementById('rs-edit-desc').value = rs.description || '';
-    document.getElementById('rs-edit-content').value = rs.content || '';
-    document.getElementById('rs-edit-title').textContent = '编辑规则集: ' + rs.name;
-    document.getElementById('ruleset-edit').style.display = 'block';
-    window.scrollTo(0, document.getElementById('ruleset-edit').offsetTop - 80);
-  } catch (e) { toast('加载失败: ' + e.message); }
-}
-function closeRulesetEdit() {
-  document.getElementById('ruleset-edit').style.display = 'none';
-}
-async function saveRulesetEdit() {
-  const id = document.getElementById('rs-edit-id').value;
-  const data = {
-    name: document.getElementById('rs-edit-name').value,
-    description: document.getElementById('rs-edit-desc').value,
-    content: document.getElementById('rs-edit-content').value,
-  };
-  if (!data.name) { toast('请填写名称'); return; }
-  try {
-    await api('/api/rulesets/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    toast('规则集已更新'); closeRulesetEdit(); loadRulesets();
-  } catch (e) { toast('保存失败: ' + e.message); }
+  document.getElementById('qr-box').style.display = 'block';
+  closeNodeDetail();
+  toast('二维码已生成');
 }
 
 // ============ 历史 ============
-function fmtTime(ts) {
-  const d = new Date(ts * 1000);
-  return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-async function loadHistory() {
-  const list = document.getElementById('history-list');
-  try {
-    const data = await api('/api/history');
-    if (!data.items.length) {
-      list.innerHTML = '<p style="color:var(--muted)">暂无转换记录</p>';
-      return;
-    }
-    list.innerHTML = data.items.map(item => `
-      <div class="list-item">
-        <div>
-          <div class="name">${item.target} <span style="color:var(--muted);font-size:11px">${item.source_type}</span></div>
-          <div class="meta">${item.node_count} 节点 | ${fmtTime(item.timestamp)} | ${item.source_preview || '直接输入'}</div>
-        </div>
-      </div>`).join('');
-  } catch (e) {
-    list.innerHTML = `<p style="color:var(--error)">加载失败: ${e.message}</p>`;
-  }
-}
 async function clearHistory() {
   if (!confirm('确认清空转换历史？')) return;
-  await api('/api/history', { method: 'DELETE' });
-  toast('已清空'); loadHistory();
+  try { await api('/api/history', { method: 'DELETE' }); toast('已清空'); } catch (e) { toast('失败: ' + e.message); }
 }
 
 // ============ 初始化 ============
-loadDashboard();
-loadProfiles();
-loadRulesets();
-loadHistory();
+(async function init() {
+  try {
+    await api('/api/health');
+    document.getElementById('header-health').innerHTML = '<span class="dot"></span>服务正常';
+  } catch (e) {
+    document.getElementById('header-health').className = 'status err';
+    document.getElementById('header-health').innerHTML = '<span class="dot"></span>服务异常';
+  }
+})();
 </script>
 </body>
 </html>
