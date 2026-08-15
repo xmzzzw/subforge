@@ -31,14 +31,33 @@ class Pipeline:
         self._transforms.append(transform)
 
     # ---- 执行 ----
-    def parse(self, content: str, source_type: str = "auto") -> List[Node]:
-        """解析订阅内容为节点列表"""
+    def parse(self, content: str, source_type: str = "auto", **kwargs) -> List[Node]:
+        """解析订阅内容为节点列表
+
+        - content: 配置内容或订阅 URL
+        - source_type: auto/surge/clash/uri/base64/url
+        - kwargs: 可传 fetch 函数（拉取 URL 用）
+        """
         if source_type == "auto":
             source_type = self._detect_source_type(content)
+
+        # URL 类型：先拉取再解析
+        if source_type == "url":
+            fetch = kwargs.get("fetch") or self._default_fetch
+            content, _info = fetch(content)
+            source_type = "auto"
+            source_type = self._detect_source_type(content)
+
         parser = self._parsers.get(source_type)
         if not parser:
             raise ValueError(f"不支持的来源类型: {source_type}")
         return parser.parse(content)
+
+    @staticmethod
+    def _default_fetch(url: str):
+        """默认拉取（延迟导入避免循环）"""
+        from ..services.fetcher import fetch_subscription
+        return fetch_subscription(url)
 
     def transform(self, nodes: List[Node], config: TransformConfig) -> List[Node]:
         """执行转换管道"""

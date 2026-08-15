@@ -109,6 +109,68 @@ class SurgeProducer(BaseProducer):
             line = (f"{name} = vmess, {node.server}, {node.port}, "
                     f"username={params.get('uuid', '')}, "
                     f"encrypt-method={params.get('cipher', 'auto')}")
+            # WebSocket
+            if params.get("network") == "ws":
+                path = params.get("ws-path", "/")
+                host = params.get("host", "")
+                line += f", ws=true, ws-path={path}"
+                if host:
+                    line += f", ws-headers=Host:{host}"
+            # TLS
+            if params.get("tls") or params.get("servername"):
+                line += ", tls=true"
+                if params.get("servername"):
+                    line += f", sni={params['servername']}"
+            return line
+        elif node.protocol == "vless":
+            line = (f"{name} = vless, {node.server}, {node.port}, "
+                    f"username={params.get('uuid', '')}")
+            if params.get("network") == "ws":
+                path = params.get("ws-path", "/")
+                host = params.get("host", "")
+                line += f", ws=true, ws-path={path}"
+                if host:
+                    line += f", ws-headers=Host:{host}"
+            if params.get("tls") or params.get("servername"):
+                line += ", tls=true"
+                if params.get("servername"):
+                    line += f", sni={params['servername']}"
+            return line
+        elif node.protocol == "hysteria2":
+            line = (f"{name} = hysteria2, {node.server}, {node.port}, "
+                    f"password={params.get('password', '')}")
+            if params.get("sni"):
+                line += f", sni={params['sni']}"
+            if params.get("obfs"):
+                line += f", obfs={params['obfs']}"
+            if params.get("obfs-password"):
+                line += f", obfs-password={params['obfs-password']}"
+            return line
+        elif node.protocol == "hysteria":
+            line = (f"{name} = hysteria, {node.server}, {node.port}, "
+                    f"auth_str={params.get('password', '')}")
+            if params.get("up"):
+                line += f", up={params['up']}"
+            if params.get("down"):
+                line += f", down={params['down']}"
+            return line
+        elif node.protocol == "tuic":
+            line = (f"{name} = tuic, {node.server}, {node.port}, "
+                    f"token={params.get('password', '')}, "
+                    f"uuid={params.get('uuid', '')}")
+            if params.get("sni"):
+                line += f", sni={params['sni']}"
+            return line
+        elif node.protocol == "wireguard":
+            line = (f"{name} = wireguard, section-name={name}, "
+                    f"self-ip=172.16.0.1, private-key={params.get('private-key', '')}, "
+                    f"peer-public-key={params.get('public-key', '')}")
+            if params.get("self-ip"):
+                line = line.replace("self-ip=172.16.0.1", f"self-ip={params['self-ip']}")
+            return line
+        elif node.protocol == "snell":
+            line = (f"{name} = snell, {node.server}, {node.port}, "
+                    f"psk={params.get('psk', '')}")
             return line
         else:
             # 通用格式（尽力而为）
