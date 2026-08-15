@@ -13,6 +13,10 @@ from .parsers.uri import URIParser
 from .parsers.base64 import Base64Parser
 from .producers.surge import SurgeProducer
 from .producers.clash import ClashProducer
+from .producers.loon import LoonProducer
+from .producers.quanx import QuanXProducer
+from .producers.shadowrocket import ShadowrocketProducer
+from .producers.singbox import SingBoxProducer
 from .transforms.group import CountryGroupBuilder
 from .transforms.filter import NodeFilter
 from .services.fetcher import fetch_subscription
@@ -45,6 +49,10 @@ pipeline.register_parser("uri", URIParser())
 pipeline.register_parser("base64", Base64Parser())
 pipeline.register_producer("surge", SurgeProducer())
 pipeline.register_producer("clash", ClashProducer())
+pipeline.register_producer("loon", LoonProducer())
+pipeline.register_producer("quanx", QuanXProducer())
+pipeline.register_producer("shadowrocket", ShadowrocketProducer())
+pipeline.register_producer("singbox", SingBoxProducer())
 pipeline.register_validator("surge", SurgeValidator())
 pipeline.register_validator("clash", MihomoValidator())
 
@@ -85,6 +93,37 @@ def qr_node(uri: str = None, box: int = 12):
     png = generate_qr_png(uri, box_size=box)
     return Response(content=png, media_type="image/png",
                     headers={"Content-Disposition": "inline; filename=node.png"})
+
+
+@app.get("/api/formats")
+def formats():
+    """支持的目标格式列表"""
+    return {"formats": sorted(pipeline._producers.keys())}
+
+
+@app.post("/api/nodes")
+def nodes_preview(req: ConvertRequest):
+    """节点预览 —— 解析并转换后返回节点列表（不生成配置）"""
+    try:
+        nodes = pipeline.parse(req.source, req.source_type)
+        nodes = pipeline.transform(nodes, req.transforms)
+        return {
+            "count": len(nodes),
+            "nodes": [
+                {
+                    "name": n.tagged_name(),
+                    "protocol": n.protocol,
+                    "server": n.server,
+                    "port": n.port,
+                    "country": n.country or "🌍 其他地区",
+                }
+                for n in nodes
+            ],
+        }
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"解析失败: {e}")
 
 
 @app.get("/api/qr/subscribe")

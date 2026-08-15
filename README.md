@@ -20,7 +20,8 @@
 ## 核心能力
 
 - **多协议解析**：SS/SSR/Trojan/AnyTLS/VMess/VLESS/Hysteria/Hysteria2/TUIC/WireGuard
-- **多格式生成**：Surge/Clash/mihomo（更多格式规划中）
+- **多格式生成**：Surge/Clash(mihomo)/Loon/Quantumult X/Shadowrocket/sing-box
+- **节点预览**：转换前查看节点列表（按国家分组）
 - **管道式架构**：Fetch → Parse → Transform → Produce → Validate（可插拔、可测试）
 - **国家分组**：自动识别（emoji/代码/中文名）+ 单节点国家合并 + 自动选择
 - **订阅刷新**：proxy 模式（每次拉取上游）/ snapshot 模式（快照）

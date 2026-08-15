@@ -112,6 +112,12 @@ pre {
 }
 .copy-btn { position: relative; float: right; }
 
+/* 节点标签 */
+.node-tag {
+  display: inline-block; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; font-size: 11px; margin: 2px; color: var(--text);
+}
+
 /* 二维码 */
 #qr-img { display: block; margin: 0 auto; max-width: 300px; border: 4px solid #fff; border-radius: 8px; }
 
@@ -221,17 +227,27 @@ pre {
           <select id="conv-target">
             <option value="clash">Clash / mihomo</option>
             <option value="surge">Surge</option>
+            <option value="loon">Loon</option>
+            <option value="quanx">Quantumult X</option>
+            <option value="shadowrocket">Shadowrocket</option>
+            <option value="singbox">sing-box</option>
           </select>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:center">
         <button class="btn" onclick="runConvert()">转换</button>
+        <button class="btn secondary" onclick="previewNodes()">节点预览</button>
         <label style="margin:0;display:flex;align-items:center;gap:6px">
           <input type="checkbox" id="conv-merge" checked style="width:auto;margin:0"> 单节点合并
         </label>
         <label style="margin:0;display:flex;align-items:center;gap:6px">
           <input type="checkbox" id="conv-tag" checked style="width:auto;margin:0"> 协议标注
         </label>
+      </div>
+      <div id="node-preview" style="margin-top:16px;display:none">
+        <h3>节点预览</h3>
+        <div id="node-stats" style="color:var(--muted);font-size:13px;margin-bottom:8px"></div>
+        <div id="node-list"></div>
       </div>
       <div id="conv-result" style="margin-top:16px;display:none">
         <button class="btn secondary sm copy-btn" onclick="copyResult()">复制</button>
@@ -452,6 +468,38 @@ async function copyResult() {
   const text = document.getElementById('conv-output').textContent;
   await navigator.clipboard.writeText(text);
   toast('已复制');
+}
+async function previewNodes() {
+  const source = document.getElementById('conv-source').value.trim();
+  if (!source) { toast('请输入订阅或配置内容'); return; }
+  const req = {
+    source,
+    source_type: document.getElementById('conv-source-type').value,
+    target: document.getElementById('conv-target').value,
+    transforms: {
+      merge_single: document.getElementById('conv-merge').checked,
+      protocol_tag: document.getElementById('conv-tag').checked,
+    }
+  };
+  document.getElementById('node-preview').style.display = 'block';
+  document.getElementById('node-list').innerHTML = '加载中...';
+  try {
+    const data = await api('/api/nodes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
+    document.getElementById('node-stats').textContent = `共 ${data.count} 个节点`;
+    // 按国家分组显示
+    const byCountry = {};
+    data.nodes.forEach(n => { (byCountry[n.country] = byCountry[n.country] || []).push(n); });
+    let html = '';
+    Object.entries(byCountry).sort((a,b) => b[1].length - a[1].length).forEach(([country, nodes]) => {
+      html += `<div style="margin-bottom:8px">
+        <b style="color:var(--primary)">${country}</b> <span style="color:var(--muted)">(${nodes.length})</span>
+        <div style="margin-top:4px">${nodes.map(n => `<span class="node-tag">${n.name}</span>`).join(' ')}</div>
+      </div>`;
+    });
+    document.getElementById('node-list').innerHTML = html;
+  } catch (e) {
+    document.getElementById('node-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
+  }
 }
 
 // ============ 二维码 ============
