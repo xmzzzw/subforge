@@ -1,0 +1,28 @@
+[project]
+name = "subforge"
+version = "0.1.0"
+description = "自托管订阅转换服务 — 塔台升级版（本地/Docker 部署，多协议多格式转换）"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+subforge = "app.main:app"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app", "app.core", "app.parsers", "app.transforms", "app.producers", "app.services", "app.models", "app.api", "app.validators"]

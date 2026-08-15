@@ -1,0 +1,14 @@
+services:
+  subforge:
+    build: .
+    container_name: subforge
+    ports:
+      - "8000:8000"
+    volumes:
+      - subforge-data:/data
+    environment:
+      - SUBFORGE_DATA_DIR=/data
+    restart: unless-stopped
+
+volumes:
+  subforge-data:

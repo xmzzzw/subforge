@@ -1,0 +1,41 @@
+# subforge 配置示例
+# Profile 定义「输入订阅 + 转换规则 + 输出格式」
+
+# 一个完整的 Profile 示例
+profiles:
+  flower-ss:
+    name: "Flower ss"
+    subscriptions:
+      - url: "https://api-huacloud.dev/sub?target=clash&insert=true&emoji=true&udp=true&clash.doh=true&new_name=true&filename=Flower_SS.yaml&url=<你的订阅>"
+        ua: "ClashForWindows/0.20.39"
+        refresh_mode: "proxy"  # proxy（每次拉取）/ snapshot（快照）
+    transforms:
+      include: []        # 只保留匹配的节点
+      exclude: []        # 排除匹配的节点
+      merge_single: true # 单节点国家合并到其他地区
+      protocol_tag: true # 节点名加协议标注 [ss]
+      country_groups: true # 生成国家分组
+      auto_select: true    # 国家分组带自动选择
+    target: "clash"      # surge / clash
+    rules:
+      mode: "myrulesets" # myrulesets / custom / none
+      custom_urls: []
+      custom_rules: []
+    update_interval: 86400
+
+  creamdata-anytls:
+    name: "CreamData anytls"
+    subscriptions:
+      - url: "https://gateway.tackinessann.xyz/Config/SurgeConfig?u=<你的ID>&t=anytls"
+        ua: "Surge"
+        refresh_mode: "proxy"
+    transforms:
+      merge_single: true
+      protocol_tag: true
+    target: "surge"
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 8000
+  data_dir: "~/.subforge"
