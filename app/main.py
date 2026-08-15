@@ -121,6 +121,7 @@ def nodes_preview(req: ConvertRequest):
                     "server": n.server,
                     "port": n.port,
                     "country": n.country or "🌍 其他地区",
+                    "uri": n.to_uri(),
                 }
                 for n in nodes
             ],

@@ -338,6 +338,19 @@ GET /api/qr/subscribe?profile=flower   → 订阅 PNG</pre>
 
 <div class="toast" id="toast"></div>
 
+<!-- 节点详情弹窗 -->
+<div id="node-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;display:none;align-items:center;justify-content:center" onclick="if(event.target===this)closeNodeDetail()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow:auto">
+    <h3 id="nd-title" style="margin-bottom:16px"></h3>
+    <div id="nd-body" style="font-size:13px;line-height:1.8"></div>
+    <div style="margin-top:16px;display:flex;gap:12px">
+      <button class="btn sm" onclick="copyNodeUri()">复制 URI</button>
+      <button class="btn sm secondary" onclick="genNodeQrFromDetail()">生成二维码</button>
+      <button class="btn sm secondary" onclick="closeNodeDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ============ 基础 ============
 const API = '';
@@ -568,13 +581,47 @@ async function previewNodes() {
     Object.entries(byCountry).sort((a,b) => b[1].length - a[1].length).forEach(([country, nodes]) => {
       html += `<div style="margin-bottom:8px">
         <b style="color:var(--primary)">${country}</b> <span style="color:var(--muted)">(${nodes.length})</span>
-        <div style="margin-top:4px">${nodes.map(n => `<span class="node-tag">${n.name}</span>`).join(' ')}</div>
+        <div style="margin-top:4px">${nodes.map(n =>
+          `<span class="node-tag" onclick="showNodeDetail(${JSON.stringify(n).replace(/"/g, '&quot;')})" title="点击查看详情">${n.name} <span style="opacity:.6">⚙</span></span>`
+        ).join(' ')}</div>
       </div>`;
     });
     document.getElementById('node-list').innerHTML = html;
   } catch (e) {
     document.getElementById('node-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
   }
+}
+
+// ============ 节点详情 ============
+let _currentNode = null;
+function showNodeDetail(node) {
+  _currentNode = node;
+  document.getElementById('nd-title').textContent = node.name;
+  document.getElementById('nd-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 16px">
+      <span style="color:var(--muted)">协议</span><span>${node.protocol}</span>
+      <span style="color:var(--muted)">服务器</span><span>${node.server}</span>
+      <span style="color:var(--muted)">端口</span><span>${node.port}</span>
+      <span style="color:var(--muted)">国家</span><span>${node.country || '🌍 其他地区'}</span>
+    </div>`;
+  document.getElementById('node-modal').style.display = 'flex';
+}
+function closeNodeDetail() {
+  document.getElementById('node-modal').style.display = 'none';
+}
+function copyNodeUri() {
+  if (!_currentNode) return;
+  const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
+  navigator.clipboard.writeText(uri);
+  toast('节点 URI 已复制');
+}
+function genNodeQrFromDetail() {
+  if (!_currentNode) return;
+  const uri = _currentNode.uri || `${_currentNode.protocol}://${_currentNode.server}:${_currentNode.port}#${encodeURIComponent(_currentNode.name)}`;
+  document.getElementById('qr-node-uri').value = uri;
+  document.querySelector('nav button[data-tab="qr"]').click();
+  genNodeQr();
+  closeNodeDetail();
 }
 
 // ============ 二维码 ============
@@ -616,13 +663,24 @@ async function runLatency() {
     const s = data.summary;
     document.getElementById('latency-summary').textContent =
       `共 ${s.total} 节点 | 可达 ${s.ok} | 超时 ${s.timeout} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
-    document.getElementById('latency-list').innerHTML = data.results.map(r => `
-      <div class="list-item">
+    // 可视化：延迟条
+    const maxMs = Math.max(...data.results.filter(r => r.status === 'ok').map(r => r.latency), 300);
+    document.getElementById('latency-list').innerHTML = data.results.map(r => {
+      if (r.status !== 'ok') {
+        return `<div class="list-item"><span class="name">${r.name}</span><span style="color:var(--error)">超时</span></div>`;
+      }
+      const pct = Math.min(100, Math.round(r.latency / maxMs * 100));
+      const color = r.latency < 150 ? 'var(--success)' : r.latency < 300 ? 'var(--warning)' : 'var(--error)';
+      return `<div class="list-item">
         <span class="name">${r.name}</span>
-        <span style="color:${r.status === 'ok' ? 'var(--success)' : 'var(--error)'}">
-          ${r.status === 'ok' ? r.latency + 'ms' : '超时'}
+        <span style="display:flex;align-items:center;gap:8px;flex:1;max-width:300px">
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px">
+            <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+          </div>
+          <span style="color:${color};min-width:50px;text-align:right">${r.latency}ms</span>
         </span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch (e) {
     document.getElementById('latency-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
   }
