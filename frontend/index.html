@@ -281,15 +281,6 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
       <div class="section-label">节点预览（<span id="node-count">0</span> 节点）</div>
       <div class="node-preview" id="node-preview"><div class="empty">导入订阅后显示节点</div></div>
 
-      <!-- 策略组展开查看（塔台式） -->
-      <div id="groups-section" style="display:none;margin-top:14px">
-        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
-          <span>策略组结构（<span id="groups-count">0</span> 个）</span>
-          <button class="btn sm secondary" id="groups-toggle" onclick="toggleGroups()">展开全部</button>
-        </div>
-        <div id="groups-list" class="groups-list" style="max-height:240px;overflow-y:auto"></div>
-      </div>
-
       <button class="btn next" id="btn-step1-next" onclick="goStep2()" disabled>
         继续：选择规则 <span>→</span>
       </button>
@@ -302,14 +293,25 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
       <div class="step-num inactive" id="step2-num">2</div>
       <div>
         <div class="step-title">规则配置</div>
-        <div class="step-sub">选择规则集 + 转换选项</div>
+        <div class="step-sub">选择策略组 + 转换选项</div>
       </div>
     </div>
     <div class="step-body">
-      <div class="section-label">规则集（勾选要启用的）</div>
-      <div id="ruleset-checkboxes" style="max-height:160px;overflow-y:auto">
-        <div class="empty">加载中...</div>
+      <!-- 导入的策略组（塔台式展开查看） -->
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📋 导入的策略组（<span id="groups-count">0</span>）</span>
+        <button class="btn sm secondary" id="groups-toggle" onclick="toggleGroups()">全部展开</button>
       </div>
+      <div id="groups-list" class="groups-list" style="max-height:200px;overflow-y:auto;margin-bottom:8px">
+        <div class="empty" style="padding:16px">导入订阅后这里会显示该订阅的策略组</div>
+      </div>
+
+      <!-- 常用策略组（参考塔台） -->
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span>⭐ 常用策略组</span>
+        <button class="btn sm secondary" id="common-groups-toggle" onclick="toggleCommonGroups()">全部展开</button>
+      </div>
+      <div id="common-groups" class="groups-list" style="max-height:220px;overflow-y:auto;margin-bottom:8px"></div>
 
       <div class="section-label">转换选项</div>
       <div class="ruleset-item">
@@ -323,6 +325,11 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
       <div class="ruleset-item">
         <input type="checkbox" id="opt-auto" checked>
         <label style="margin:0">国家分组带自动选择（url-test）</label>
+      </div>
+
+      <div class="section-label">规则集（勾选要启用的）</div>
+      <div id="ruleset-checkboxes" style="max-height:140px;overflow-y:auto">
+        <div class="empty">加载中...</div>
       </div>
 
       <div class="section-label">节点筛选（可选）</div>
@@ -478,6 +485,8 @@ function setStep(n, active) {
 }
 function goStep2() {
   setStep(2);
+  renderGroups();
+  renderCommonGroups();
   loadRulesetCheckboxes();
   document.getElementById('step-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -575,12 +584,35 @@ function updateStep1Next() {
 }
 
 // ============ 策略组展开查看（塔台式）============
+// 常用策略组（参考塔台 RulePolicy + 我们的规格）
+const COMMON_GROUPS = [
+  { name: '🚀 节点选择', type: 'select', desc: '顶层入口，引用所有国家分组', members: ['🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🇸🇬 新加坡', '🇨🇳 台湾', '🌍 其他地区'] },
+  { name: '♻️ 自动选择', type: 'url-test', desc: '自动测速选最快节点', members: ['🇭🇰 香港-自动', '🇺🇸 美国-自动', '🇯🇵 日本-自动', '🇸🇬 新加坡-自动', '🌍 其他地区-自动'] },
+  { name: '🤖 AI 服务', type: 'select', desc: 'AI 平台（OpenAI/Claude/Gemini/opencode）', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🌍 其他地区'] },
+  { name: '🎬 国外媒体', type: 'select', desc: 'Netflix/Disney+/HBO/YouTube 等', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🇯🇵 日本', '🌍 其他地区'] },
+  { name: '📺 YouTube', type: 'select', desc: 'YouTube 视频', members: ['Proxies', '🎯Direct', '🇺🇸 美国', '🇯🇵 日本', '🇭🇰 香港'] },
+  { name: '💬 Telegram', type: 'select', desc: 'Telegram 消息', members: ['Proxies', '🎯Direct', '🇸🇬 新加坡', '🇭🇰 香港', '🇯🇵 日本'] },
+  { name: '🇨🇳 国内流量', type: 'select', desc: '国内网站直连', members: ['DIRECT', 'Proxies'] },
+  { name: '🌐 国际流量', type: 'select', desc: '国外流量走代理', members: ['Proxies', '🎯Direct'] },
+  { name: '🍎 苹果服务', type: 'select', desc: 'Apple 服务', members: ['DIRECT', 'Proxies', '🇺🇸 美国'] },
+  { name: 'Ⓜ️ 微软服务', type: 'select', desc: 'Microsoft 服务', members: ['Proxies', '🎯Direct', '🇺🇸 美国'] },
+  { name: '🔍 谷歌服务', type: 'select', desc: 'Google 服务', members: ['Proxies', '🎯Direct', '🇺🇸 美国'] },
+  { name: '🚫 广告拦截', type: 'select', desc: '拦截广告', members: ['REJECT', 'DIRECT'] },
+  { name: '🎯 全球直连', type: 'select', desc: '强制直连', members: ['DIRECT'] },
+  { name: '✈️ Final', type: 'select', desc: '最终兜底', members: ['Proxies', '🎯Direct', '🇭🇰 香港', '🇺🇸 美国', '🌍 其他地区'] },
+];
+
 let groupsExpanded = false;
+let commonGroupsExpanded = false;
 function renderGroups() {
-  const section = document.getElementById('groups-section');
-  if (!allGroups.length) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  document.getElementById('groups-count').textContent = allGroups.length;
+  const count = document.getElementById('groups-count');
+  const list = document.getElementById('groups-list');
+  if (!allGroups.length) {
+    count.textContent = 0;
+    list.innerHTML = '<div class="empty" style="padding:16px">导入订阅后这里会显示该订阅的策略组</div>';
+    return;
+  }
+  count.textContent = allGroups.length;
   renderGroupsList();
 }
 function renderGroupsList() {
@@ -607,8 +639,37 @@ function toggleGroup(idx) {
 }
 function toggleGroups() {
   groupsExpanded = !groupsExpanded;
-  document.getElementById('groups-toggle').textContent = groupsExpanded ? '收起全部' : '展开全部';
+  document.getElementById('groups-toggle').textContent = groupsExpanded ? '收起全部' : '全部展开';
   renderGroupsList();
+}
+
+// 常用策略组
+function renderCommonGroups() {
+  const list = document.getElementById('common-groups');
+  list.innerHTML = COMMON_GROUPS.map((g, idx) => `
+    <div class="group-item ${commonGroupsExpanded ? 'open' : ''}" id="cg-item-${idx}">
+      <div class="group-head" onclick="toggleCommonGroup(${idx})">
+        <span class="g-name">${g.name}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="g-type">${g.desc}</span>
+          <span class="g-arrow">▶</span>
+        </span>
+      </div>
+      <div class="group-members">
+        <div class="group-members-inner">
+          ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleCommonGroup(idx) {
+  const item = document.getElementById('cg-item-' + idx);
+  item.classList.toggle('open');
+}
+function toggleCommonGroups() {
+  commonGroupsExpanded = !commonGroupsExpanded;
+  document.getElementById('common-groups-toggle').textContent = commonGroupsExpanded ? '收起全部' : '全部展开';
+  renderCommonGroups();
 }
 
 function loadDemoSub() {
