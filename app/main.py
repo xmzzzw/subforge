@@ -283,25 +283,21 @@ def delete_profile(pid: str):
 
 
 def _convert_profile(p: Profile) -> PlainTextResponse:
-    """按 Profile 转换（合并所有订阅，逐订阅转换）"""
-    from .models.profile import ConvertRequest
+    """按 Profile 转换（聚合所有订阅 + 去重 + 订阅信息透传）"""
+    from .services.aggregator import aggregate_subscriptions
 
-    # 拉取所有订阅并合并
-    all_nodes = []
-    errors = []
-    for sub in p.subscriptions:
-        try:
-            content, info = fetch_subscription(sub.url, ua=sub.ua)
-            nodes = pipeline.parse(content, "auto")
-            all_nodes.extend(nodes)
-        except Exception as e:
-            errors.append(str(e))
+    # 聚合所有订阅（去重 + 订阅信息）
+    result = aggregate_subscriptions(
+        [s.model_dump() for s in p.subscriptions],
+        lambda content, st: pipeline.parse(content, st),
+        dedup=True,
+    )
 
-    if not all_nodes:
-        raise HTTPException(502, f"订阅拉取失败: {'; '.join(errors)}")
+    if not result.nodes:
+        raise HTTPException(502, f"订阅拉取失败: {'; '.join(result.errors)}")
 
     # 转换
-    nodes = pipeline.transform(all_nodes, p.transforms)
+    nodes = pipeline.transform(result.nodes, p.transforms)
     content = pipeline.produce(nodes, p.target, transforms=p.transforms)
     return PlainTextResponse(content)
 

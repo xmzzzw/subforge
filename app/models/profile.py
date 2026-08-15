@@ -10,6 +10,7 @@ class Subscription(BaseModel):
     name: Optional[str] = None
     ua: Optional[str] = "ClashForWindows/0.20.39"  # User-Agent
     refresh_mode: str = "proxy"  # proxy（代理模式）/ snapshot（快照模式）
+    prefix: Optional[str] = None  # 节点前缀（区分不同机场）
 
 
 class TransformConfig(BaseModel):
