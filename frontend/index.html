@@ -428,6 +428,7 @@ async function loadProfiles() {
         <div class="actions">
           <button class="btn sm secondary" onclick="editProfile('${p.id}')">编辑</button>
           <button class="btn sm" onclick="getSubLink('${p.name}')">订阅链接</button>
+          <button class="btn sm secondary" onclick="testProfile('${p.name}')">测试</button>
           <button class="btn sm danger" onclick="deleteProfile('${p.id}','${p.name}')">删除</button>
         </div>
       </div>`;
@@ -511,6 +512,20 @@ async function getSubLink(name) {
   const url = `${location.origin}/api/subscribe?profile=${name}`;
   await navigator.clipboard.writeText(url).catch(()=>{});
   toast('订阅链接已复制: ' + url);
+}
+async function testProfile(name) {
+  toast(`测试 ${name} 的订阅...`);
+  try {
+    const data = await api('/api/profile/test', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ profile: name }) });
+    let msg = `${name}: 可用 ${data.ok}/${data.total}`;
+    const failed = data.results.filter(r => !r.ok);
+    if (failed.length) {
+      msg += ` | 失败: ${failed.map(f => f.url.split('/')[2] || '?').join(', ')}`;
+    }
+    toast(msg);
+  } catch (e) {
+    toast('测试失败: ' + e.message);
+  }
 }
 
 // ============ 转换测试 ============

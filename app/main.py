@@ -132,6 +132,54 @@ def nodes_preview(req: ConvertRequest):
         raise HTTPException(500, f"解析失败: {e}")
 
 
+@app.post("/api/profile/test")
+def profile_test(data: dict):
+    """Profile 连通性测试 —— 验证 Profile 的订阅 URL 是否可用。
+
+    请求体: {"profile": "名称"} 或 {"urls": ["...", ...]}
+    """
+    # 获取要测试的订阅 URL 列表
+    if "profile" in data:
+        p = profile_store.get_by_name(data["profile"])
+        if not p:
+            raise HTTPException(404, f"Profile '{data['profile']}' 不存在")
+        urls = [s.url for s in p.subscriptions]
+    elif "urls" in data:
+        urls = data["urls"]
+    else:
+        raise HTTPException(400, "需要 profile 或 urls 参数")
+
+    results = []
+    for url in urls:
+        try:
+            content, info = fetch_subscription(url)
+            # 解析节点数
+            nodes = pipeline.parse(content, "auto")
+            results.append({
+                "url": url,
+                "ok": True,
+                "nodes": len(nodes),
+                "traffic": info.raw if info and info.has_data else None,
+                "error": None,
+            })
+        except Exception as e:
+            results.append({
+                "url": url,
+                "ok": False,
+                "nodes": 0,
+                "traffic": None,
+                "error": str(e),
+            })
+
+    ok_count = sum(1 for r in results if r["ok"])
+    return {
+        "total": len(results),
+        "ok": ok_count,
+        "failed": len(results) - ok_count,
+        "results": results,
+    }
+
+
 @app.post("/api/latency")
 def latency_test(req: ConvertRequest, timeout: float = 3.0):
     """延迟测试 —— 对节点做 TCP 连接测速。
