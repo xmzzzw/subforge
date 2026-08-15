@@ -107,11 +107,48 @@ class ClashProducer(BaseProducer):
             proxy["udp"] = True
             if "network" in params:
                 proxy["network"] = params["network"]
+            # TLS
+            if "tls" in params:
+                proxy["tls"] = params["tls"]
+            if "servername" in params:
+                proxy["servername"] = params["servername"]
+            # WebSocket 传输
+            if "ws-opts" in params and isinstance(params["ws-opts"], dict):
+                proxy["ws-opts"] = params["ws-opts"]
+            elif "ws-path" in params:
+                proxy["ws-opts"] = {"path": params["ws-path"]}
+                if "host" in params:
+                    proxy["ws-opts"]["headers"] = {"Host": params["host"]}
+            elif params.get("network") == "ws":
+                ws_opts = {}
+                if params.get("ws-path"):
+                    ws_opts["path"] = params["ws-path"]
+                if params.get("host"):
+                    ws_opts["headers"] = {"Host": params["host"]}
+                if ws_opts:
+                    proxy["ws-opts"] = ws_opts
+            # gRPC
+            if "grpc-opts" in params and isinstance(params["grpc-opts"], dict):
+                proxy["grpc-opts"] = params["grpc-opts"]
+            elif params.get("grpc-service-name"):
+                proxy["grpc-opts"] = {"grpc-service-name": params["grpc-service-name"]}
+            # 底层传输
+            for k in ("reality-opts", "client-fingerprint", "flow"):
+                if k in params:
+                    proxy[k] = params[k]
         elif node.protocol in ("hysteria", "hysteria2"):
             proxy["password"] = params.get("password", "")
             if "sni" in params:
                 proxy["sni"] = params["sni"]
             proxy["skip-cert-verify"] = params.get("skip-cert-verify", False)
+            if "obfs" in params:
+                proxy["obfs"] = params["obfs"]
+            if "obfs-password" in params:
+                proxy["obfs-password"] = params["obfs-password"]
+            if "up" in params:
+                proxy["up"] = params["up"]
+            if "down" in params:
+                proxy["down"] = params["down"]
         else:
             # 通用：透传
             proxy.update(params)

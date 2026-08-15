@@ -53,11 +53,42 @@ class ClashParser(BaseParser):
             params["cipher"] = p.get("cipher", "auto")
             if "network" in p:
                 params["network"] = p["network"]
+            # TLS
+            if "tls" in p:
+                params["tls"] = p["tls"]
+            if "servername" in p:
+                params["servername"] = p["servername"]
+            # WebSocket 传输
+            ws_opts = p.get("ws-opts") or {}
+            if ws_opts:
+                params["ws-opts"] = ws_opts
+                if "path" in ws_opts:
+                    params["ws-path"] = ws_opts["path"]
+                if "headers" in ws_opts and ws_opts["headers"].get("Host"):
+                    params["host"] = ws_opts["headers"]["Host"]
+            # gRPC
+            grpc_opts = p.get("grpc-opts") or {}
+            if grpc_opts:
+                params["grpc-opts"] = grpc_opts
+                if "grpc-service-name" in grpc_opts:
+                    params["grpc-service-name"] = grpc_opts["grpc-service-name"]
+            # 底层传输
+            for k in ("reality-opts", "client-fingerprint", "flow"):
+                if p.get(k):
+                    params[k] = p[k]
         elif proto in ("hysteria", "hysteria2"):
             params["password"] = p.get("password", "")
             if "sni" in p:
                 params["sni"] = p["sni"]
             params["skip-cert-verify"] = p.get("skip-cert-verify", False)
+            if "obfs" in p:
+                params["obfs"] = p["obfs"]
+            if "obfs-password" in p:
+                params["obfs-password"] = p["obfs-password"]
+            if "up" in p:
+                params["up"] = p["up"]
+            if "down" in p:
+                params["down"] = p["down"]
         elif proto == "tuic":
             params["password"] = p.get("password", "")
             params["uuid"] = p.get("uuid", "")
