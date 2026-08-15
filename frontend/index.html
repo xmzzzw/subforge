@@ -452,15 +452,7 @@ async function importSubscription() {
   let errors = [];
   for (const sub of subs) {
     try {
-      const content = await api('/api/convert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source: sub.url, source_type: 'url', target: 'clash',
-          transforms: { merge_single: true, protocol_tag: false }
-        })
-      });
-      // 通过 /api/nodes 拿节点列表
+      // 通过 /api/nodes 拉取并解析节点（后端处理 URL 拉取）
       const nodeData = await api('/api/nodes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -493,7 +485,7 @@ function renderSubList(subs, errors) {
         <div class="meta">${s.url.split('/')[2] || s.url}</div>
       </div>
     </div>`).join('')
-    + (errors.length ? `<div style="color:var(--error);font-size:11px;margin-top:6px">失败: ${errors.join('; ')}</div>` : '');
+    + (errors.length ? `<div style="color:var(--warning);font-size:11px;margin-top:8px;line-height:1.6">⚠️ 导入失败：${errors.join('<br>')}</div>` : '');
 }
 
 function renderNodePreview() {
