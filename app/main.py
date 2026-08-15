@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .core.pipeline import Pipeline
 from .models.profile import ConvertRequest, Profile
@@ -29,6 +30,7 @@ from .validators.surge import SurgeValidator
 
 DATA_DIR = os.environ.get("SUBFORGE_DATA_DIR", os.path.expanduser("~/.subforge"))
 FRONTEND_DIR = os.environ.get("SUBFORGE_FRONTEND_DIR", str(Path(__file__).parent.parent / "frontend"))
+LOGOS_DIR = os.path.join(FRONTEND_DIR, "logos")
 
 # 创建应用
 app = FastAPI(
@@ -80,6 +82,11 @@ def index():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return PlainTextResponse("subforge API — 请部署 frontend/index.html")
+
+
+# 静态资源（客户端 logo 等）
+if os.path.exists(LOGOS_DIR):
+    app.mount("/logos", StaticFiles(directory=LOGOS_DIR), name="logos")
 
 
 @app.get("/api/health")
