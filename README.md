@@ -56,6 +56,12 @@ curl http://localhost:8000/api/health
 # 订阅转换（最常用）
 curl "http://localhost:8000/api/subscribe?url=<机场订阅>&target=clash&include=香港"
 
+# 节点二维码（手机扫码导入单个节点）
+curl "http://localhost:8000/api/qr/node?uri=ss://..." -o node.png
+
+# 订阅二维码（手机扫码导入整个订阅）
+curl "http://localhost:8000/api/qr/subscribe?profile=flower" -o sub.png
+
 # 用已保存的 Profile
 curl "http://localhost:8000/api/subscribe?profile=flower-ss"
 

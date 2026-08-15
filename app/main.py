@@ -59,6 +59,54 @@ def health():
     return {"status": "ok", "version": "0.1.0"}
 
 
+@app.get("/api/qr/node")
+def qr_node(uri: str = None, box: int = 12):
+    """节点二维码 —— 生成单个节点 URI 的二维码 PNG。
+
+    用法: /api/qr/node?uri=ss://base64@host:port#name
+    手机扫码可导入单个节点。
+    """
+    from fastapi.responses import Response
+    from .services.qr import generate_qr_png, is_valid_uri
+
+    if not uri or not is_valid_uri(uri):
+        raise HTTPException(400, "无效的 URI，需为 ss:// trojan:// anytls:// 等协议链接")
+    png = generate_qr_png(uri, box_size=box)
+    return Response(content=png, media_type="image/png",
+                    headers={"Content-Disposition": "inline; filename=node.png"})
+
+
+@app.get("/api/qr/subscribe")
+def qr_subscribe(profile: str = None, url: str = None, box: int = 12):
+    """订阅二维码 —— 生成订阅链接的二维码 PNG。
+
+    用法:
+    - /api/qr/subscribe?profile=flower   (用已保存 Profile)
+    - /api/qr/subscribe?url=<订阅>       (直接转换)
+    手机扫码可导入整个订阅。
+    """
+    from fastapi.responses import Response
+    from urllib.parse import urlencode
+    from .services.qr import generate_qr_png, is_valid_uri
+
+    # 构建订阅链接（二维码内容）
+    if profile:
+        p = profile_store.get_by_name(profile)
+        if not p:
+            raise HTTPException(404, f"Profile '{profile}' 不存在")
+        sub_url = f"/api/subscribe?profile={profile}"
+    elif url:
+        if not is_valid_uri(url):
+            raise HTTPException(400, "无效的订阅 URL")
+        sub_url = f"/api/subscribe?{urlencode({'url': url})}"
+    else:
+        raise HTTPException(400, "需要 profile 或 url 参数")
+
+    png = generate_qr_png(sub_url, box_size=box)
+    return Response(content=png, media_type="image/png",
+                    headers={"Content-Disposition": "inline; filename=subscribe.png"})
+
+
 @app.get("/api/subscribe")
 def subscribe(
     profile: str = None,

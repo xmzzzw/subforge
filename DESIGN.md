@@ -222,6 +222,13 @@ GET /api/subscribe?profile=<name>
 # 或直接传参
 GET /api/subscribe?url=<订阅URL>&target=clash&include=香港&exclude=澳门
 
+# 节点二维码（手机扫码导入单个节点）
+GET /api/qr/node?uri=ss://...  → PNG
+
+# 订阅二维码（手机扫码导入整个订阅）
+GET /api/qr/subscribe?profile=flower  → PNG
+GET /api/qr/subscribe?url=<订阅URL>   → PNG
+
 # 转换配置
 POST /api/convert
 { "source": "...", "target": "clash", "transforms": [...] }
