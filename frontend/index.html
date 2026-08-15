@@ -162,6 +162,23 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 .ruleset-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
 .ruleset-item input[type=checkbox] { width: auto; margin: 0; }
 
+/* 过渡动画 */
+.step { transition: opacity .3s ease, transform .3s ease; }
+.step.disabled { opacity: .55; transform: scale(.99); }
+.step:not(.disabled) { animation: stepFade .35s ease; }
+@keyframes stepFade {
+  from { opacity: .4; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.list-item, .group-item, .client-option {
+  transition: background .2s, border-color .2s, transform .2s, opacity .2s;
+}
+.list-item:hover, .client-option:hover { transform: translateY(-1px); }
+.node-tag { transition: all .2s; }
+.node-tag:hover { transform: translateY(-1px); }
+#node-preview, #groups-list { transition: opacity .3s; }
+.empty { animation: stepFade .3s ease; }
+
 /* 提示 */
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -171,6 +188,34 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 }
 .toast.show { display: block; animation: slideUp .3s; }
 @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; } }
+
+/* 策略组展开 */
+.groups-list { font-size: 12px; }
+.group-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; margin-bottom: 4px; overflow: hidden;
+}
+.group-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 10px; cursor: pointer; transition: background .2s;
+}
+.group-head:hover { background: rgba(79,140,255,.08); }
+.group-head .g-name { font-weight: 600; }
+.group-head .g-type { color: var(--muted); font-size: 10px; padding: 1px 6px; background: var(--surface); border-radius: 4px; }
+.group-head .g-arrow { transition: transform .25s; color: var(--muted); }
+.group-item.open .g-arrow { transform: rotate(90deg); }
+.group-members {
+  max-height: 0; overflow: hidden; transition: max-height .3s ease;
+}
+.group-item.open .group-members { max-height: 300px; }
+.group-members-inner {
+  padding: 6px 10px 10px; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 4px;
+}
+.group-members-inner .member-tag {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px; font-size: 10px; color: var(--text);
+}
 
 /* 客户端选择器 */
 .client-picker {
@@ -235,6 +280,15 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 
       <div class="section-label">节点预览（<span id="node-count">0</span> 节点）</div>
       <div class="node-preview" id="node-preview"><div class="empty">导入订阅后显示节点</div></div>
+
+      <!-- 策略组展开查看（塔台式） -->
+      <div id="groups-section" style="display:none;margin-top:14px">
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>策略组结构（<span id="groups-count">0</span> 个）</span>
+          <button class="btn sm secondary" id="groups-toggle" onclick="toggleGroups()">展开全部</button>
+        </div>
+        <div id="groups-list" class="groups-list" style="max-height:240px;overflow-y:auto"></div>
+      </div>
 
       <button class="btn next" id="btn-step1-next" onclick="goStep2()" disabled>
         继续：选择规则 <span>→</span>
@@ -378,6 +432,7 @@ textarea { min-height: 80px; font-family: monospace; font-size: 12px; }
 // ============ 全局状态 ============
 const API = '';
 let allNodes = [];       // 步骤1 导入的节点
+let allGroups = [];      // 策略组结构
 let currentNodeList = []; // 转换后的节点
 let currentConfig = '';  // 生成的配置
 let currentTarget = 'clash';
@@ -463,6 +518,10 @@ async function importSubscription() {
       });
       const nodes = nodeData.nodes.map(n => ({ ...n, prefix: sub.prefix }));
       allNodeList = allNodeList.concat(nodes);
+      // 保存策略组结构（取第一个有数据的）
+      if (nodeData.groups && nodeData.groups.length && !allGroups.length) {
+        allGroups = nodeData.groups;
+      }
     } catch (e) {
       errors.push(`${sub.url.split('/')[2]||'?'}: ${e.message}`);
     }
@@ -471,6 +530,7 @@ async function importSubscription() {
   allNodes = allNodeList;
   renderSubList(subs, errors);
   renderNodePreview();
+  renderGroups();
   toast(`导入完成: ${allNodes.length} 个节点${errors.length ? `, ${errors.length} 个订阅失败` : ''}`);
   updateStep1Next();
 }
@@ -512,6 +572,43 @@ function renderNodePreview() {
 
 function updateStep1Next() {
   document.getElementById('btn-step1-next').disabled = allNodes.length === 0;
+}
+
+// ============ 策略组展开查看（塔台式）============
+let groupsExpanded = false;
+function renderGroups() {
+  const section = document.getElementById('groups-section');
+  if (!allGroups.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  document.getElementById('groups-count').textContent = allGroups.length;
+  renderGroupsList();
+}
+function renderGroupsList() {
+  const list = document.getElementById('groups-list');
+  list.innerHTML = allGroups.map((g, idx) => `
+    <div class="group-item ${groupsExpanded ? 'open' : ''}" id="g-item-${idx}">
+      <div class="group-head" onclick="toggleGroup(${idx})">
+        <span class="g-name">${g.name}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="g-type">${g.type} · ${g.members.length}</span>
+          <span class="g-arrow">▶</span>
+        </span>
+      </div>
+      <div class="group-members">
+        <div class="group-members-inner">
+          ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleGroup(idx) {
+  const item = document.getElementById('g-item-' + idx);
+  item.classList.toggle('open');
+}
+function toggleGroups() {
+  groupsExpanded = !groupsExpanded;
+  document.getElementById('groups-toggle').textContent = groupsExpanded ? '收起全部' : '展开全部';
+  renderGroupsList();
 }
 
 function loadDemoSub() {

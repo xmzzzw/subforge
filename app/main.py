@@ -119,10 +119,26 @@ def formats():
 
 @app.post("/api/nodes")
 def nodes_preview(req: ConvertRequest):
-    """节点预览 —— 解析并转换后返回节点列表（不生成配置）"""
+    """节点预览 —— 解析并转换后返回节点列表 + 策略组结构（塔台式查看）"""
     try:
+        from .transforms.group import CountryGroupBuilder
+
         nodes = pipeline.parse(req.source, req.source_type)
         nodes = pipeline.transform(nodes, req.transforms)
+
+        # 构建策略组结构（供前端展开查看）
+        builder = CountryGroupBuilder()
+        groups, by_country = builder.build_groups(nodes, req.transforms)
+
+        # 格式化策略组（含成员）
+        group_list = []
+        for g in groups:
+            group_list.append({
+                "name": g["name"],
+                "type": g["type"],
+                "members": g["members"],
+            })
+
         return {
             "count": len(nodes),
             "nodes": [
@@ -136,6 +152,12 @@ def nodes_preview(req: ConvertRequest):
                 }
                 for n in nodes
             ],
+            "groups": group_list,
+            "countries": {
+                c: len(names) for c, names in sorted(
+                    by_country.items(), key=lambda x: -len(x[1])
+                )
+            },
         }
     except ValueError as e:
         raise HTTPException(400, str(e))
