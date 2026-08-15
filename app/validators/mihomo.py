@@ -8,6 +8,12 @@ MIHOMO_PATHS = [
     "/Applications/Clash Verge.app/Contents/MacOS/verge-mihomo",
 ]
 
+# 从 PATH 中查找 mihomo（Docker 里可用）
+import shutil
+_FOUND_IN_PATH = shutil.which("mihomo") or shutil.which("clash-meta") or shutil.which("verge-mihomo")
+if _FOUND_IN_PATH:
+    MIHOMO_PATHS.insert(0, _FOUND_IN_PATH)
+
 
 class MihomoValidator:
     """验证 Clash/mihomo 配置合法性（有 mihomo 时可用）"""

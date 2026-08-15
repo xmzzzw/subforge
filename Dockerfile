@@ -4,7 +4,7 @@ WORKDIR /app
 
 # 安装依赖
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic pyyaml requests
+RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic pyyaml requests "qrcode[pil]"
 
 # 复制代码
 COPY app/ ./app/

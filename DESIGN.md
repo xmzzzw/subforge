@@ -233,6 +233,23 @@ GET /api/qr/subscribe?url=<订阅URL>   → PNG
 POST /api/convert
 { "source": "...", "target": "clash", "transforms": [...] }
 
+# 节点预览（转换前查看节点，按国家分组）
+POST /api/nodes
+{ "source": "...", "transforms": {...} }
+
+# 延迟测试（节点 TCP 测速）
+POST /api/latency
+{ "source": "...", "transforms": {...} }
+→ { "count": N, "summary": {...}, "results": [...] }
+
+# 支持格式列表
+GET /api/formats
+→ {"formats": ["clash", "surge", "loon", "quanx", "shadowrocket", "singbox"]}
+
+# 规则集管理（内置 my-rulesets + 自定义）
+GET/POST  /api/rulesets
+DELETE    /api/rulesets/<id>
+
 # 配置档案管理
 GET/POST/PUT/DELETE /api/profiles
 
