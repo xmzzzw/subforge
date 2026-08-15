@@ -2,7 +2,7 @@
 
 每个方案是一组策略组定义（类似塔台的内置方案）：
 - myrulesets：默认标准方案（国家分组 + 应用组 + Final）
-- tower-style：塔台式方案（节点选择/自动选择/AI服务等）
+- tower-style：常用分流方案（节点选择/自动选择/AI服务等，参考塔台分流理念）
 - custom：用户自定义导入
 """
 import json
@@ -31,10 +31,10 @@ BUILTIN_STRATEGIES = [
         ],
     },
     {
-        "name": "塔台式方案",
+        "name": "常用分流方案",
         "key": "tower-style",
         "builtin": True,
-        "description": "参考塔台 RulePolicy：节点选择/自动选择/AI/媒体等",
+        "description": "常用分流：节点选择/自动选择/AI服务/媒体/国内/国际等",
         "groups": [
             {"name": "🚀 节点选择", "type": "select", "members": ["{countries}"]},
             {"name": "♻️ 自动选择", "type": "url-test", "members": ["{auto_countries}"], "url": "http://www.gstatic.com/generate_204", "interval": 300},
