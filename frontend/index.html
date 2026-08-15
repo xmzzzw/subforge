@@ -147,6 +147,7 @@ pre {
     <button data-tab="convert">转换测试</button>
     <button data-tab="rulesets">规则集</button>
     <button data-tab="qr">二维码</button>
+    <button data-tab="history">历史</button>
     <button data-tab="api">API</button>
   </nav>
 </header>
@@ -321,6 +322,14 @@ pre {
       <h3>二维码</h3>
       <img id="qr-img" alt="二维码">
       <p style="color:var(--muted);font-size:12px;margin-top:8px" id="qr-content"></p>
+    </div>
+  </div>
+
+  <!-- 历史 -->
+  <div id="tab-history" class="tab">
+    <div class="card">
+      <h2>转换历史 <button class="btn sm danger" onclick="clearHistory()" style="float:right">清空</button></h2>
+      <div id="history-list"></div>
     </div>
   </div>
 
@@ -788,10 +797,41 @@ async function saveRulesetEdit() {
   } catch (e) { toast('保存失败: ' + e.message); }
 }
 
+// ============ 历史 ============
+function fmtTime(ts) {
+  const d = new Date(ts * 1000);
+  return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+async function loadHistory() {
+  const list = document.getElementById('history-list');
+  try {
+    const data = await api('/api/history');
+    if (!data.items.length) {
+      list.innerHTML = '<p style="color:var(--muted)">暂无转换记录</p>';
+      return;
+    }
+    list.innerHTML = data.items.map(item => `
+      <div class="list-item">
+        <div>
+          <div class="name">${item.target} <span style="color:var(--muted);font-size:11px">${item.source_type}</span></div>
+          <div class="meta">${item.node_count} 节点 | ${fmtTime(item.timestamp)} | ${item.source_preview || '直接输入'}</div>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = `<p style="color:var(--error)">加载失败: ${e.message}</p>`;
+  }
+}
+async function clearHistory() {
+  if (!confirm('确认清空转换历史？')) return;
+  await api('/api/history', { method: 'DELETE' });
+  toast('已清空'); loadHistory();
+}
+
 // ============ 初始化 ============
 loadDashboard();
 loadProfiles();
 loadRulesets();
+loadHistory();
 </script>
 </body>
 </html>

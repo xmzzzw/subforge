@@ -23,6 +23,7 @@ from .services.fetcher import fetch_subscription
 from .services.profile import ProfileStore
 from .services.rules import RulesetStore
 from .services.latency import test_latency, summarize
+from .services.history import HistoryStore
 from .validators.mihomo import MihomoValidator
 from .validators.surge import SurgeValidator
 
@@ -67,6 +68,9 @@ profile_store = ProfileStore(DATA_DIR)
 
 # 规则集管理
 ruleset_store = RulesetStore(DATA_DIR)
+
+# 转换历史
+history_store = HistoryStore(DATA_DIR)
 
 
 @app.get("/")
@@ -242,6 +246,19 @@ def delete_ruleset(rid: str):
     return {"ok": True}
 
 
+@app.get("/api/history")
+def list_history():
+    """转换历史"""
+    return {"items": history_store.list()}
+
+
+@app.delete("/api/history")
+def clear_history():
+    """清空转换历史"""
+    history_store.clear()
+    return {"ok": True}
+
+
 @app.get("/api/qr/subscribe")
 def qr_subscribe(profile: str = None, url: str = None, box: int = 12):
     """订阅二维码 —— 生成订阅链接的二维码 PNG。
@@ -377,6 +394,13 @@ def _convert_request(req: ConvertRequest) -> PlainTextResponse:
         raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"转换失败: {e}")
+    # 记录历史
+    history_store.add(
+        target=req.target,
+        source_type=req.source_type,
+        node_count=result["nodes"],
+        source_preview=req.source[:100],
+    )
     return PlainTextResponse(result["config"])
 
 
