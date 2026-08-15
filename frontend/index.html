@@ -145,6 +145,7 @@ pre {
     <button data-tab="dashboard" class="active">仪表盘</button>
     <button data-tab="profiles">配置档案</button>
     <button data-tab="convert">转换测试</button>
+    <button data-tab="rulesets">规则集</button>
     <button data-tab="qr">二维码</button>
     <button data-tab="api">API</button>
   </nav>
@@ -237,6 +238,7 @@ pre {
       <div style="display:flex;gap:12px;align-items:center">
         <button class="btn" onclick="runConvert()">转换</button>
         <button class="btn secondary" onclick="previewNodes()">节点预览</button>
+        <button class="btn secondary" onclick="runLatency()">延迟测试</button>
         <label style="margin:0;display:flex;align-items:center;gap:6px">
           <input type="checkbox" id="conv-merge" checked style="width:auto;margin:0"> 单节点合并
         </label>
@@ -245,15 +247,43 @@ pre {
         </label>
       </div>
       <div id="node-preview" style="margin-top:16px;display:none">
-        <h3>节点预览</h3>
+        <h3>节点预览 <button class="btn sm secondary" onclick="runLatency()" style="margin-left:8px">测试延迟</button></h3>
         <div id="node-stats" style="color:var(--muted);font-size:13px;margin-bottom:8px"></div>
         <div id="node-list"></div>
+      </div>
+      <div id="latency-result" style="margin-top:16px;display:none">
+        <h3>延迟测试结果</h3>
+        <div id="latency-summary" style="color:var(--muted);font-size:13px;margin-bottom:8px"></div>
+        <div id="latency-list"></div>
       </div>
       <div id="conv-result" style="margin-top:16px;display:none">
         <button class="btn secondary sm copy-btn" onclick="copyResult()">复制</button>
         <h3>转换结果</h3>
         <pre id="conv-output"></pre>
       </div>
+    </div>
+  </div>
+
+  <!-- 规则集 -->
+  <div id="tab-rulesets" class="tab">
+    <div class="card">
+      <h2>规则集管理</h2>
+      <button class="btn sm" onclick="showRulesetForm()">+ 添加自定义规则集</button>
+      <div id="rulesets-form" style="display:none;margin-top:16px">
+        <label>名称</label>
+        <input id="rs-name" placeholder="自定义规则集名">
+        <label>Surge 规则集 URL</label>
+        <input id="rs-surge" placeholder="https://...list">
+        <label>Clash 规则集 URL</label>
+        <input id="rs-clash" placeholder="https://...list">
+        <label>说明</label>
+        <input id="rs-desc" placeholder="用途说明">
+        <div style="margin-top:12px;display:flex;gap:12px">
+          <button class="btn" onclick="saveRuleset()">保存</button>
+          <button class="btn secondary" onclick="closeRulesetForm()">取消</button>
+        </div>
+      </div>
+      <div id="rulesets-list" style="margin-top:16px"></div>
     </div>
   </div>
 
@@ -521,9 +551,85 @@ async function genSubQr() {
   document.getElementById('qr-result').style.display = 'block';
 }
 
+// ============ 延迟测试 ============
+async function runLatency() {
+  const source = document.getElementById('conv-source').value.trim();
+  if (!source) { toast('请输入订阅或配置内容'); return; }
+  const req = {
+    source,
+    source_type: document.getElementById('conv-source-type').value,
+    target: document.getElementById('conv-target').value,
+    transforms: {
+      merge_single: document.getElementById('conv-merge').checked,
+      protocol_tag: document.getElementById('conv-tag').checked,
+    }
+  };
+  document.getElementById('latency-result').style.display = 'block';
+  document.getElementById('latency-list').innerHTML = '测试中...';
+  try {
+    const data = await api('/api/latency', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(req) });
+    const s = data.summary;
+    document.getElementById('latency-summary').textContent =
+      `共 ${s.total} 节点 | 可达 ${s.ok} | 超时 ${s.timeout} | 平均 ${s.avg_ms}ms | 最快 ${s.best_ms}ms`;
+    document.getElementById('latency-list').innerHTML = data.results.map(r => `
+      <div class="list-item">
+        <span class="name">${r.name}</span>
+        <span style="color:${r.status === 'ok' ? 'var(--success)' : 'var(--error)'}">
+          ${r.status === 'ok' ? r.latency + 'ms' : '超时'}
+        </span>
+      </div>`).join('');
+  } catch (e) {
+    document.getElementById('latency-list').innerHTML = `<span style="color:var(--error)">错误: ${e.message}</span>`;
+  }
+}
+
+// ============ 规则集 ============
+async function loadRulesets() {
+  const list = document.getElementById('rulesets-list');
+  try {
+    const data = await api('/api/rulesets');
+    list.innerHTML = data.rulesets.map(rs => `
+      <div class="list-item">
+        <div>
+          <div class="name">${rs.name} ${rs.builtin ? '<span style="color:var(--muted);font-size:11px">内置</span>' : ''}</div>
+          <div class="meta">${rs.description || '自定义规则集'}${rs.builtin ? ' | clash: ' + (rs.clash_url||'').split('/').pop() : ''}</div>
+        </div>
+        <div class="actions">
+          ${rs.builtin ? '' : `<button class="btn sm danger" onclick="deleteRuleset('${rs.id}')">删除</button>`}
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    list.innerHTML = `<p style="color:var(--error)">加载失败: ${e.message}</p>`;
+  }
+}
+function showRulesetForm() { document.getElementById('rulesets-form').style.display = 'block'; }
+function closeRulesetForm() {
+  document.getElementById('rulesets-form').style.display = 'none';
+  ['rs-name','rs-surge','rs-clash','rs-desc'].forEach(id => document.getElementById(id).value = '');
+}
+async function saveRuleset() {
+  const data = {
+    name: document.getElementById('rs-name').value,
+    surge_url: document.getElementById('rs-surge').value,
+    clash_url: document.getElementById('rs-clash').value,
+    description: document.getElementById('rs-desc').value,
+  };
+  if (!data.name || !(data.surge_url || data.clash_url)) { toast('请填写名称和至少一个 URL'); return; }
+  try {
+    await api('/api/rulesets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    toast('规则集已添加'); closeRulesetForm(); loadRulesets();
+  } catch (e) { toast('添加失败: ' + e.message); }
+}
+async function deleteRuleset(id) {
+  if (!confirm('确认删除该自定义规则集？')) return;
+  await api('/api/rulesets/' + id, { method: 'DELETE' });
+  toast('已删除'); loadRulesets();
+}
+
 // ============ 初始化 ============
 loadDashboard();
 loadProfiles();
+loadRulesets();
 </script>
 </body>
 </html>

@@ -21,6 +21,8 @@ from .transforms.group import CountryGroupBuilder
 from .transforms.filter import NodeFilter
 from .services.fetcher import fetch_subscription
 from .services.profile import ProfileStore
+from .services.rules import RulesetStore
+from .services.latency import test_latency, summarize
 from .validators.mihomo import MihomoValidator
 from .validators.surge import SurgeValidator
 
@@ -62,6 +64,9 @@ pipeline.add_transform(CountryGroupBuilder())
 
 # Profile 存储
 profile_store = ProfileStore(DATA_DIR)
+
+# 规则集管理
+ruleset_store = RulesetStore(DATA_DIR)
 
 
 @app.get("/")
@@ -124,6 +129,50 @@ def nodes_preview(req: ConvertRequest):
         raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"解析失败: {e}")
+
+
+@app.post("/api/latency")
+def latency_test(req: ConvertRequest, timeout: float = 3.0):
+    """延迟测试 —— 对节点做 TCP 连接测速。
+
+    请求体同 /api/convert，返回每个节点的延迟（毫秒）。
+    """
+    try:
+        nodes = pipeline.parse(req.source, req.source_type)
+        nodes = pipeline.transform(nodes, req.transforms)
+        node_list = [
+            {"name": n.tagged_name(), "server": n.server, "port": n.port}
+            for n in nodes
+        ]
+        results = test_latency(node_list, timeout=timeout)
+        return {
+            "count": len(results),
+            "summary": summarize(results),
+            "results": results,
+        }
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"测试失败: {e}")
+
+
+@app.get("/api/rulesets")
+def list_rulesets():
+    """规则集清单（内置 my-rulesets + 自定义）"""
+    return {"rulesets": ruleset_store.list()}
+
+
+@app.post("/api/rulesets")
+def create_ruleset(data: dict):
+    """创建自定义规则集"""
+    return ruleset_store.create(data)
+
+
+@app.delete("/api/rulesets/{rid}")
+def delete_ruleset(rid: str):
+    if not ruleset_store.delete(rid):
+        raise HTTPException(404, "规则集不存在")
+    return {"ok": True}
 
 
 @app.get("/api/qr/subscribe")

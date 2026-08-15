@@ -22,6 +22,8 @@
 - **多协议解析**：SS/SSR/Trojan/AnyTLS/VMess/VLESS/Hysteria/Hysteria2/TUIC/WireGuard
 - **多格式生成**：Surge/Clash(mihomo)/Loon/Quantumult X/Shadowrocket/sing-box
 - **节点预览**：转换前查看节点列表（按国家分组）
+- **延迟测试**：节点 TCP 测速（并发，超时控制）
+- **规则集管理**：内置 my-rulesets 24 个 + 自定义规则集
 - **管道式架构**：Fetch → Parse → Transform → Produce → Validate（可插拔、可测试）
 - **国家分组**：自动识别（emoji/代码/中文名）+ 单节点国家合并 + 自动选择
 - **订阅刷新**：proxy 模式（每次拉取上游）/ snapshot 模式（快照）
