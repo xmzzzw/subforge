@@ -217,6 +217,24 @@ def create_ruleset(data: dict):
     return ruleset_store.create(data)
 
 
+@app.get("/api/rulesets/{rid}")
+def get_ruleset(rid: str):
+    """规则集详情（含内容）"""
+    rs = ruleset_store.get(rid)
+    if not rs:
+        raise HTTPException(404, "规则集不存在")
+    return rs
+
+
+@app.put("/api/rulesets/{rid}")
+def update_ruleset(rid: str, data: dict):
+    """更新自定义规则集（含内容编辑）"""
+    rs = ruleset_store.update(rid, data)
+    if not rs:
+        raise HTTPException(404, "规则集不存在")
+    return rs
+
+
 @app.delete("/api/rulesets/{rid}")
 def delete_ruleset(rid: str):
     if not ruleset_store.delete(rid):

@@ -102,10 +102,27 @@ class RulesetStore:
             "surge_url": data.get("surge_url", ""),
             "clash_url": data.get("clash_url", ""),
             "description": data.get("description", ""),
+            "content": data.get("content", ""),  # 内联规则内容
         }
         self._rulesets[rid] = rs
         self._save()
         return {"id": rid, **rs, "builtin": False}
+
+    def get(self, rid: str) -> Optional[dict]:
+        """获取自定义规则集详情（含内容）"""
+        if rid in self._rulesets:
+            return {**self._rulesets[rid], "id": rid, "builtin": False}
+        return None
+
+    def update(self, rid: str, data: dict) -> Optional[dict]:
+        """更新自定义规则集"""
+        if rid not in self._rulesets:
+            return None
+        for k in ("name", "surge_url", "clash_url", "description", "content"):
+            if k in data:
+                self._rulesets[rid][k] = data[k]
+        self._save()
+        return {**self._rulesets[rid], "id": rid, "builtin": False}
 
     def delete(self, rid: str) -> bool:
         if rid in self._rulesets:

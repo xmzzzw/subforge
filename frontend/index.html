@@ -287,6 +287,20 @@ pre {
       </div>
       <div id="rulesets-list" style="margin-top:16px"></div>
     </div>
+    <div id="ruleset-edit" class="card" style="display:none">
+      <h2 id="rs-edit-title">编辑规则集</h2>
+      <input type="hidden" id="rs-edit-id">
+      <label>名称</label>
+      <input id="rs-edit-name">
+      <label>说明</label>
+      <input id="rs-edit-desc">
+      <label>规则内容（每行一条，如 DOMAIN-SUFFIX,example.com）</label>
+      <textarea id="rs-edit-content" style="min-height:200px;font-family:monospace"></textarea>
+      <div style="margin-top:12px;display:flex;gap:12px">
+        <button class="btn" onclick="saveRulesetEdit()">保存</button>
+        <button class="btn secondary" onclick="closeRulesetEdit()">取消</button>
+      </div>
+    </div>
   </div>
 
   <!-- 二维码 -->
@@ -713,7 +727,9 @@ async function loadRulesets() {
           <div class="meta">${rs.description || '自定义规则集'}${rs.builtin ? ' | clash: ' + (rs.clash_url||'').split('/').pop() : ''}</div>
         </div>
         <div class="actions">
-          ${rs.builtin ? '' : `<button class="btn sm danger" onclick="deleteRuleset('${rs.id}')">删除</button>`}
+          ${rs.builtin ? '' : `
+            <button class="btn sm secondary" onclick="editRuleset('${rs.id}')">编辑</button>
+            <button class="btn sm danger" onclick="deleteRuleset('${rs.id}')">删除</button>`}
         </div>
       </div>`).join('');
   } catch (e) {
@@ -742,6 +758,34 @@ async function deleteRuleset(id) {
   if (!confirm('确认删除该自定义规则集？')) return;
   await api('/api/rulesets/' + id, { method: 'DELETE' });
   toast('已删除'); loadRulesets();
+}
+async function editRuleset(id) {
+  try {
+    const rs = await api('/api/rulesets/' + id);
+    document.getElementById('rs-edit-id').value = id;
+    document.getElementById('rs-edit-name').value = rs.name;
+    document.getElementById('rs-edit-desc').value = rs.description || '';
+    document.getElementById('rs-edit-content').value = rs.content || '';
+    document.getElementById('rs-edit-title').textContent = '编辑规则集: ' + rs.name;
+    document.getElementById('ruleset-edit').style.display = 'block';
+    window.scrollTo(0, document.getElementById('ruleset-edit').offsetTop - 80);
+  } catch (e) { toast('加载失败: ' + e.message); }
+}
+function closeRulesetEdit() {
+  document.getElementById('ruleset-edit').style.display = 'none';
+}
+async function saveRulesetEdit() {
+  const id = document.getElementById('rs-edit-id').value;
+  const data = {
+    name: document.getElementById('rs-edit-name').value,
+    description: document.getElementById('rs-edit-desc').value,
+    content: document.getElementById('rs-edit-content').value,
+  };
+  if (!data.name) { toast('请填写名称'); return; }
+  try {
+    await api('/api/rulesets/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    toast('规则集已更新'); closeRulesetEdit(); loadRulesets();
+  } catch (e) { toast('保存失败: ' + e.message); }
 }
 
 // ============ 初始化 ============
