@@ -238,8 +238,6 @@ textarea { min-height: 70px; font-family: monospace; font-size: 12px; }
 }
 .btn.next:hover { background: var(--primary); color: #fff; }
 
-/* 策略组展开（保留） */
-.groups-list { font-size: 12px; }
 
 /* 提示 */
 .toast {
@@ -329,23 +327,14 @@ textarea { min-height: 70px; font-family: monospace; font-size: 12px; }
       </div>
     </div>
 
-    <!-- 本机规则（内置方案 Section） -->
+    <!-- 本机规则（内置方案 + 已导入策略组） -->
     <div class="section-heading">
       <span class="sh-title">本机规则</span>
-      <span class="sh-detail">内置方案，离线可用</span>
+      <span class="sh-detail">内置方案 + 已导入的策略组</span>
     </div>
+    <!-- 已导入的策略组（我们做的） -->
+    <div id="imported-groups-card" style="display:none"></div>
     <div id="strategy-list" class="scheme-list"></div>
-
-    <!-- 已导入方案 Section（订阅策略组） -->
-    <div class="section-heading">
-      <span class="sh-title">已导入订阅</span>
-      <span class="sh-detail">订阅自带的策略组</span>
-    </div>
-    <div id="groups-list" class="scheme-list">
-      <div class="scheme-card">
-        <div class="empty" style="padding:20px">导入订阅后，这里会显示该订阅的策略组方案</div>
-      </div>
-    </div>
 
     <!-- 定制 Section（选中方案后显示策略组勾选） -->
     <div id="customization-section" style="display:none">
@@ -629,7 +618,7 @@ function updateRulesOverview() {
   document.getElementById('overview-groups').textContent = allGroups.length;
   document.getElementById('overview-strategies').textContent = _allStrategies.length || 0;
   document.getElementById('rules-overview-sub').textContent =
-    allNodes.length ? `已导入订阅 · ${allNodes.length} 节点 · ${allGroups.length} 策略组` : '选择规则方案，管理策略组';
+    allNodes.length ? `已导入策略组 · ${allNodes.length} 节点 · ${allGroups.length} 策略组` : '选择规则方案，管理策略组';
 }
 
 // 方案卡片（塔台式 RuleSchemeCard）
@@ -698,20 +687,21 @@ async function saveStrategy(json) {
   } catch(e) { toast('解析失败: ' + e.message); }
 }
 
-// 已导入订阅的策略组（塔台式：方案卡片 + 展开勾选）
+// 已导入的策略组（我们做的，放在「本机规则」顶部）
 function renderGroups() {
-  const list = document.getElementById('groups-list');
+  const card = document.getElementById('imported-groups-card');
   updateRulesOverview();
   if (!allGroups.length) {
-    list.innerHTML = `<div class="scheme-card"><div class="empty" style="padding:20px">导入订阅后，这里会显示该订阅的策略组方案</div></div>`;
+    card.style.display = 'none';
     return;
   }
+  card.style.display = 'block';
   const enabledCount = selectedGroups.size===0 ? allGroups.length : selectedGroups.size;
-  list.innerHTML = `
+  card.innerHTML = `
     <div class="scheme-card">
       <div class="scheme-head" onclick="toggleAllGroups()">
         <div>
-          <div class="s-name">导入的策略组</div>
+          <div class="s-name">已导入的策略组</div>
           <div class="s-meta">${allGroups.length} 个策略组 · 已启用 ${enabledCount}</div>
         </div>
         <div class="s-check">✓</div>
@@ -721,10 +711,10 @@ function renderGroups() {
       </div>
       <div id="groups-members" style="display:${groupsExpanded?'block':'none'};border-top:1px solid var(--border)">
         <div class="group-check-list" style="max-height:280px;overflow-y:auto">
-          ${allGroups.map(g=>{
+          ${allGroups.map((g,idx)=>{
             const enabled = selectedGroups.size===0 || selectedGroups.has(g.name);
-            return `<div class="group-check-item ${enabled?'enabled':''} ${enabled?'':'disabled-item'}" onclick="toggleGroupCheck('${g.name.replace(/'/g,"\\'")}')">
-              <span class="gc-name">${g.name}</span>
+            return `<div class="group-check-item ${enabled?'enabled':''}" data-idx="${idx}" onclick="event.stopPropagation();toggleGroupCheckByIndex(${idx})">
+              <span class="gc-name">${esc(g.name)}</span>
               <span class="gc-icon">${enabled?'✓':'○'}</span>
             </div>`;
           }).join('')}
@@ -736,8 +726,10 @@ function toggleAllGroups() {
   groupsExpanded = !groupsExpanded;
   renderGroups();
 }
-function toggleGroupCheck(name) {
+// 按索引勾选（避免名字转义问题 + 事件冒泡）
+function toggleGroupCheckByIndex(idx) {
   if (selectedGroups.size===0) { selectedGroups = new Set(allGroups.map(g=>g.name)); }
+  const name = allGroups[idx].name;
   if (selectedGroups.has(name)) selectedGroups.delete(name); else selectedGroups.add(name);
   renderGroups();
 }
